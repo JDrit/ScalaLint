@@ -48,7 +48,7 @@ class TypesTest extends FunSuite {
   }
 
   test("Simple Type") {
-    parse("id1.id2.id3", Types.simpleType, TypeDesignator("id1.id2.id3"))
+    parse("id1.id2.id3", Types.simpleType, TypeDesignator(Symbol("id1.id2.id3")))
   }
 
   test("Compound Types") {

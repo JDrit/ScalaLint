@@ -18,13 +18,13 @@ object Types {
 
   val classQualifier = P("[" ~ id ~ "]")
 
-  val stableId: Parser[String] =
+  val stableId: Parser[Symbol] =
     (
       ((id ~ ".").? ~ ("this" ~ "." ~ id | "super" ~ classQualifier.? ~ "." ~ id) | id)
       ~ ("." ~ id).rep
-    ).!
+    ).!.map { case str => Symbol(str) }
 
-  val path: Parser[String] = (stableId | (id ~ ".").? ~ "this").!
+  val path: Parser[Symbol] = (stableId | (id ~ ".").? ~ "this").!.map { case str => Symbol(str) }
 
   def simpleType: Parser[SimpleType] = {
     val left =

@@ -19,28 +19,27 @@ class BaseTest extends FunSuite {
   }
 
   test("op char") {
-    parse("+-", Literals.op, "+-")
+    parse("+-", Literals.op, '+-)
     parseError("the", Literals.op)
   }
 
   test("variable id") {
-    parse("testing", Literals.varId, "testing")
-    parse("testing_+", Literals.varId, "testing_+")
-    parse("testing_+", Literals.varId, "testing_+")
+    parse("testing", Literals.varId, 'testing)
+    parse("testing_+", Literals.varId, 'testing_+)
     parseError("Testing", Literals.varId)
   }
 
   test("plain id") {
-    parse("testing", Literals.plainId, "testing")
-    parse("Testing", Literals.plainId, "Testing")
-    parse("testing_+", Literals.plainId, "testing_+")
+    parse("testing", Literals.plainId, 'testing)
+    parse("Testing", Literals.plainId, 'Testing)
+    parse("testing_+", Literals.plainId, 'testing_+)
     parseError("this is a test", Literals.plainId)
   }
 
   test("id") {
-    parse("testing", Literals.id, "testing")
-    parse("Testing", Literals.id, "Testing")
-    parse("`\"string literal\"`", Literals.id, "string literal")
+    parse("testing", Literals.id, 'testing)
+    parse("Testing", Literals.id, 'Testing)
+    parse("`\"string literal\"`", Literals.id, Symbol("string literal"))
   }
 
   test("char No Double Quote Or New line") {

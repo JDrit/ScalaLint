@@ -12,7 +12,7 @@ object Declarations {
   abstract class Declaration
 
   // A value declaration val x: T introduces x as a name of a value of type T.
-  case class ValDcl(ids: Seq[String], typ: Typ)
+  case class ValDcl(ids: Seq[Symbol], typ: Typ)
 
   case class VariantTypeParam(annotations: Seq[Annotation], variance: Option[Dependency.Value], param: TypeParam) extends Declaration
 

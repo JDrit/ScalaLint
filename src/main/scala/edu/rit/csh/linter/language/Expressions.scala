@@ -13,12 +13,12 @@ object Expressions {
 
   case class TryExp(tryExp: Expression, catchExp: Option[Expression], finallyExp: Option[Expression])
 
-  case class Binding(id: String, typ: Option[Typ]) extends Expression
+  case class Binding(id: Symbol, typ: Option[Typ]) extends Expression
 
   case class ExpressionLiteral[T](literal: Literal[T]) extends Expression
 
   // A designator refers to a named term. It can be a simple name or a selection
-  case class DesignatorExpression(str: String) extends Expression
+  case class DesignatorExpression(str: Symbol) extends Expression
 
   object Operator extends Enumeration {
     val Neg, Plus, Tilda, Bang = Value

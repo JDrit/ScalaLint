@@ -15,14 +15,14 @@ object Types {
   // A singleton type is of the form p.type, where p is a path pointing to a value expected
   // to conform to scala.AnyRef. The type denotes the set of values consisting of null and
   // the value denoted by p.
-  case class SingletonType(path: String, typ: Typ) extends SimpleType
+  case class SingletonType(path: Symbol, typ: Typ) extends SimpleType
 
   // A type projection T#x references the type member named x of type T.
-  case class TypeProjection(typ: SimpleType, id: String) extends SimpleType
+  case class TypeProjection(typ: SimpleType, id: Symbol) extends SimpleType
 
   // A type designator refers to a named value type. It can be simple or qualified.
   // All such type designators are shorthands for type projections.
-  case class TypeDesignator(stableId: String) extends SimpleType
+  case class TypeDesignator(stableId: Symbol) extends SimpleType
 
   // A parameterized type T[T1,…,Tn] consists of a type designator T and type parameters T1,…,Tn
   // where n≥1. T must refer to a type constructor which takes n type parameters a1,…,an.
@@ -44,7 +44,7 @@ object Types {
   // An infix type T1 op T2 consists of an infix operator op which gets applied to two
   // type operands T1 and T2. The type is equivalent to the type application op[T1,T2].
   // The infix operator op may be an arbitrary identifier.
-  case class InfixType(left: Typ, right: Option[(String, Typ)]) extends Typ
+  case class InfixType(left: Typ, right: Option[(Symbol, Typ)]) extends Typ
 
   case class FunctionType(types: Seq[Typ], result: Typ) extends Typ
 }

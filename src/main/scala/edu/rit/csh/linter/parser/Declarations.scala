@@ -18,7 +18,7 @@ object Declarations {
   // ValDcl ::= ids ‘:’ Type
   val valDcl = (ids ~ ":" ~ typ).map { case (ids, typ) => ValDcl(ids, typ) }
 
-  val patDef =
+//  val patDef =
 
   val patVarDef = "val"
 

@@ -32,9 +32,9 @@ object Literals {
     '{', '}', '`', ''', '"', '.', ';', ',') ++ ('A' to 'Z') ++ ('a' to 'z') ++ ('0' to '9')
   private val inOp = '\u0020' to '\u007F'
 
-  val op = P(CharComb(inOp, notInOp)).rep(1).!
-  val varId = P(lower.! ~ idRest.!).map { case (b, bs) => b + bs }
-  val plainId = P((upper.! ~ idRest.!).map { case (b, bs) => b + bs }
+  val op: Parser[Symbol] = P(CharComb(inOp, notInOp)).rep(1).!.map { case str => Symbol(str) }
+  val varId: Parser[Symbol] = P(lower.! ~ idRest.!).map { case (b, bs) => Symbol(b + bs) }
+  val plainId: Parser[Symbol] = P((upper.! ~ idRest.!).map { case (b, bs) => Symbol(b + bs) }
                  | varId
                  | op)
 
@@ -87,6 +87,6 @@ object Literals {
     }
     | booleanLiteral | characterLiteral | stringLiteral | symbolLiteral | nullLiteral)
 
-  val id = "`" ~ stringLiteral.map { _.value } ~ "`" | plainId
+  val id: Parser[Symbol] = "`" ~ stringLiteral.map { case s => Symbol(s.value) } ~ "`" | plainId
 
 }
