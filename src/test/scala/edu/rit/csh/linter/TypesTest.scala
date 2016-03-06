@@ -39,7 +39,23 @@ class TypesTest extends FunSuite {
 
   }
 
+  test("Annotations") {
+
+  }
+
+  test("Annotated Types") {
+
+  }
+
   test("Simple Type") {
     parse("id1.id2.id3", Types.simpleType, TypeDesignator("id1.id2.id3"))
+  }
+
+  test("Compound Types") {
+
+  }
+
+  test("Infix Types") {
+
   }
 }

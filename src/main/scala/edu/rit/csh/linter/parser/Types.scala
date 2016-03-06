@@ -7,18 +7,16 @@ import fastparse.core.Parser
 
 object Types {
   import Literals._
+  import Declarations._
+  import Annotations._
 
-  val typ: Parser[Typ] = P("").!.map { TypeDesignator }
-
-
-
-  val types = P(typ ~ ("," ~ typ).rep).map {
+  def types = P(typ ~ ("," ~ typ).rep).map {
     case (ty, tys) => tys :+ ty
   }
 
-  val typeArgs: Parser[Seq[Typ]] = P("[" ~ types ~ "]")
+  def typeArgs: Parser[Seq[Typ]] = P("[" ~ types ~ "]")
 
-  val classQualifier = P("[" ~ Literals.id ~ "]")
+  val classQualifier = P("[" ~ id ~ "]")
 
   val stableId: Parser[String] =
     (
@@ -28,8 +26,13 @@ object Types {
 
   val path: Parser[String] = (stableId | (id ~ ".").? ~ "this").!
 
-  val simpleType: Parser[SimpleType] = {
-    val left = stableId.map { TypeDesignator } | (path ~ "." ~ typ).map { SingletonType.tupled }
+  def simpleType: Parser[SimpleType] = {
+    val left =
+      ( stableId.map { TypeDesignator }
+      | (path ~ "." ~ typ).map { SingletonType.tupled }
+      | "(" ~ types.map { TupleType } ~ ")"
+      )
+
     (left ~ typeArgs.?).map {
       case (st, Some(args)) => ParameterizedType(st, args)
       case (st, None) => st
@@ -39,11 +42,11 @@ object Types {
       }
   }
 
-  val annotation: Parser[Annotation] = ("@" ~ simpleType ~ Expressions.argumentExprs.rep)
-    .map { case (st, exprs) => Annotation(st, exprs) }
+  // 3.2.6 Annotated Types
 
+  // AnnotType  ::=  SimpleType {Annotation}
   val annotType: Parser[AnnotatedType] = (simpleType ~ annotation.rep)
-    .map { case (st, annots) => AnnotatedType(st, annots) }
+    .map { AnnotatedType.tupled }
 
   // 3.2.7 Compound Types
 
@@ -51,10 +54,29 @@ object Types {
   val compoundType: Parser[CompoundType] =
     (annotType ~ ("with" ~ annotType).rep).map { case (at, ats) => CompoundType(ats :+ at) }
 
+  // 3.2.8
+
   // InfixType ::= CompoundType {id [nl] CompoundType}
   val infixType = (compoundType ~ (id ~ nl.? ~ compoundType).rep).map {
-    case (ct, cts) => cts.foldLeft(InfixType(ct, None)) {
-      case (left, (op, right)) => InfixType(left, Some(op, right))
+    case (ct, cts) => cts.foldLeft(InfixType(ct, None)) { case (left, (op, right)) =>
+      InfixType(left, Some(op, right))
     }
   }
+
+  // 3.2.9 Function Types
+
+  val functionArgs: Parser[Seq[Typ]] =
+    ( infixType.map { ty => Seq(ty) }
+    | ("(" ~ (paramType ~ ("," ~ paramType).rep).? ~ ")").map {
+        case Some((pt, pts)) => pts :+ pt
+        case None => Seq.empty
+      }
+    )
+
+  // 3.2.10 Existential Types
+
+  val existentialDcl = ("type" ~ typeDcl) | ("val" ~ valDcl)
+
+  def typ: Parser[FunctionType] = (functionArgs ~ "=>" ~ typ).map { FunctionType.tupled }
+
 }

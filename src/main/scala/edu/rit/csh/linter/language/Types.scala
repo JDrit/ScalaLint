@@ -1,5 +1,6 @@
 package edu.rit.csh.linter.language
 
+import edu.rit.csh.linter.language.Annotations.Annotation
 import edu.rit.csh.linter.language.Expressions.Expression
 
 /**
@@ -28,9 +29,7 @@ object Types {
   case class ParameterizedType(typ: SimpleType, args: Seq[Typ]) extends SimpleType
 
   // A tuple type (T1,…,Tn) is an alias for the class scala.Tuplen[T1, … , Tn], where n≥2.
-  case class TupleType(typs: List[Typ]) extends SimpleType
-
-  case class Annotation(typ: SimpleType, args: Seq[Seq[Expression]])
+  case class TupleType(typs: Seq[Typ]) extends SimpleType
 
   // An annotated type T a1,…,an attaches annotations a1,…,an to the type T.
   case class AnnotatedType(typ: SimpleType, annotations: Seq[Annotation]) extends Typ
@@ -46,4 +45,6 @@ object Types {
   // type operands T1 and T2. The type is equivalent to the type application op[T1,T2].
   // The infix operator op may be an arbitrary identifier.
   case class InfixType(left: Typ, right: Option[(String, Typ)]) extends Typ
+
+  case class FunctionType(types: Seq[Typ], result: Typ) extends Typ
 }
