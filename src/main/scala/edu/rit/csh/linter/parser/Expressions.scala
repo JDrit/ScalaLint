@@ -5,8 +5,16 @@ import fastparse.all._
 import fastparse.core.Parser
 
 object Expressions {
+  import Literals._
 
-  val expr: Parser[Expression] = ???
+  val expr1: Parser[Expression] =
+    ( ("if" ~ "(" ~ expr ~ ")" ~ nl.rep ~ expr ~ (semi.? ~ "else" ~ expr).?).map {
+        case (cond, thenExpr, elseExpr) => IfExp(cond, thenExpr, elseExpr)
+      }
+    | ("while" ~ "(" ~ expr ~ ")" ~ nl.rep ~ expr).map { case (cond, exp) => WhileExp(cond, exp) }
+    )
+
+  val expr: Parser[Expression] = expr1
 
   val exprs: Parser[Seq[Expression]] = (expr ~ ("," ~ expr).rep).map { case (e, es) => es :+ e }
 
@@ -17,7 +25,7 @@ object Expressions {
     | Types.path.map { DesignatorExpression }
     )
 
-  val simpleExpr: Parser[Expression] = ???
+  val simpleExpr: Parser[Expression] = simpleExpr1 ~ "_".?
 
   val prefixExpr: Parser[OpExpression] =
     ( "-" ~ simpleExpr.map { case exp => OpExpression(Operator.Neg, exp) }

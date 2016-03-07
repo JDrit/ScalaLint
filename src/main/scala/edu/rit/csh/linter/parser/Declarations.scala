@@ -33,18 +33,18 @@ object Declarations {
   // 4.4 Type Parameters
 
   // TypeParamClause ::= ‘[’ VariantTypeParam {‘,’ VariantTypeParam} ‘]’
-  def typeParamClause: Parser[Seq[VariantTypeParam]] =
+  val typeParamClause: Parser[Seq[VariantTypeParam]] =
     ("[" ~ variantTypeParam ~ ("," ~ variantTypeParam).rep ~ "]").map { case (ty, tys) => tys :+ ty }
 
   // VariantTypeParam ::= {Annotation} [‘+’ | ‘-’] TypeParam
-  def variantTypeParam: Parser[VariantTypeParam] = (annotation.rep ~ ("+" | "-").!.? ~ typeParam).map {
+  val variantTypeParam: Parser[VariantTypeParam] = (annotation.rep ~ ("+" | "-").!.? ~ typeParam).map {
     case (annotations, None, param) => VariantTypeParam(annotations, None, param)
     case (annotations, Some("+"), param) => VariantTypeParam(annotations, Some(Covariant), param)
     case (annotations, Some("-"), param) => VariantTypeParam(annotations, Some(Contravariant), param)
   }
 
   // TypeParam ::= (id | ‘_’) [TypeParamClause] [‘>:’ Type] [‘<:’ Type] [‘:’ Type]
-  def typeParam: Parser[TypeParam] = ((id | "_").! ~ typeParamClause.? ~ (">:" ~ typ).? ~ ("<:" ~ typ).? ~ (":" ~ typ).?).map { TypeParam.tupled }
+  val typeParam: Parser[TypeParam] = ((id | "_").! ~ typeParamClause.? ~ (">:" ~ typ).? ~ ("<:" ~ typ).? ~ (":" ~ typ).?).map { TypeParam.tupled }
 
 
 

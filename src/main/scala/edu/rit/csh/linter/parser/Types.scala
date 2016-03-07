@@ -10,11 +10,11 @@ object Types {
   import Declarations._
   import Annotations._
 
-  def types = P(typ ~ ("," ~ typ).rep).map {
+  val types = P(typ ~ ("," ~ typ).rep).map {
     case (ty, tys) => tys :+ ty
   }
 
-  def typeArgs: Parser[Seq[Typ]] = P("[" ~ types ~ "]")
+  val typeArgs: Parser[Seq[Typ]] = P("[" ~ types ~ "]")
 
   val classQualifier = P("[" ~ id ~ "]")
 
@@ -26,7 +26,7 @@ object Types {
 
   val path: Parser[Symbol] = (stableId | (id ~ ".").? ~ "this").!.map { case str => Symbol(str) }
 
-  def simpleType: Parser[SimpleType] = {
+  val simpleType: Parser[SimpleType] = {
     val left =
       ( stableId.map { TypeDesignator }
       | (path ~ "." ~ typ).map { SingletonType.tupled }
@@ -77,6 +77,6 @@ object Types {
 
   val existentialDcl = ("type" ~ typeDcl) | ("val" ~ valDcl)
 
-  def typ: Parser[FunctionType] = (functionArgs ~ "=>" ~ typ).map { FunctionType.tupled }
+  val typ: Parser[FunctionType] = (functionArgs ~ "=>" ~ typ).map { FunctionType.tupled }
 
 }

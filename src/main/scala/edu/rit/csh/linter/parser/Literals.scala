@@ -12,7 +12,7 @@ object Literals {
   private val digit = CharIn('0' to '9')
   private val hex = digit | CharIn('a' to 'f') | CharIn('A' to 'F')
   private val lower = CharIn('a' to 'z')
-  private val upper = CharIn('A' to 'Z')
+  val upper = CharIn('A' to 'Z')
   private val letter = lower | upper
 
   val hexDigit: Parser[Int] = hex.!.map { i => Integer.valueOf(i, 16) }
