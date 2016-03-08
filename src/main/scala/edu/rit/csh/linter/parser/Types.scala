@@ -77,6 +77,8 @@ object Types {
 
   val existentialDcl = ("type" ~ typeDcl) | ("val" ~ valDcl)
 
-  val typ: Parser[FunctionType] = (functionArgs ~ "=>" ~ typ).map { FunctionType.tupled }
+  val typ = stableId.map { TypeDesignator }
+
+  //val typ: Parser[FunctionType] = (functionArgs ~ "=>" ~ typ).map { FunctionType.tupled }
 
 }

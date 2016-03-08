@@ -10,7 +10,23 @@ object Patterns {
 
   val wildCard = P("_").map { _ => '_ }
 
-  // 8.1.1 Variable Patterns
+  // 8.2 Type Patterns
+  val typPat = typ
+
+  // 8.1.2 Typed Patterns
+  val pattern1 = ((varId | wildCard) ~ ":" ~ typPat).map { TypedPattern.tupled } | pattern2
+
+  val pattern3 = (simplePattern ~ (id ~ nl.? ~ simplePattern).rep).map { case (pt, pts) => pts :+ pt }
+
+  // 8.1.3 Pattern Binders
+  val pattern2 = (varId ~ "@" ~ pattern3).map { PatternBinder.tupled }
+
+
+  val pattern = (pattern1 ~ ("|" ~ pattern1).rep).map { case (pt, pts) => pts :+ pt }
+
+  val patterns: Parser[Seq[Pattern]] = (pattern ~ ("," ~ pattern).rep).map { case (pt, pts) => pt ++ pts.flatten }
+
+
   val literalPattern = literal.map { case lit => LiteralPattern(lit) }
   val variablePattern = (varId | wildCard).map { VariablePattern }
   val stableIdPattern = stableId.map { case sid =>
@@ -28,7 +44,7 @@ object Patterns {
     .map { case (id, patts) => ConstructorPattern(id, patts.getOrElse(Seq.empty)) }
   val tuplePattern = "(" ~ patterns.map { TuplePattern } ~ ")"
   val sequencePattern = (stableId ~ "(" ~ (patterns ~ ",").? ~ (varId ~ "@").? ~ "_" ~ "@" ~ ")")
-    .map { case (sid, patterns, vid) => SequencePattern(sid, patterns.getOrElse(Seq.empty), vid) }
+    .map { case (sid, pts, vid) => SequencePattern(sid, pts.getOrElse(Seq.empty), vid) }
 
   val simplePattern: Parser[Pattern] =
       ( literalPattern
@@ -36,24 +52,7 @@ object Patterns {
       | tuplePattern
       | constructorPattern
       | stableIdPattern
-      | variablePattern
-      )
+      | variablePattern )
 
-
-  // 8.1.2 Typed Patterns
-  val pattern1 = ((varId | wildCard) ~ ":" ~ typPat).map { TypedPattern.tupled }
-
-  // 8.1.3 Pattern Binders
-  //val pattern2 = (varId ~ "@" ~ pattern3).map { PatternBinder.tupled }
-
-  // 8.1.4 - 8.1.9
-
-
-  // 8.2 Type Patterns
-  val typPat = typ
-
-  val pattern = (pattern1 ~ ("|" ~ pattern1).rep).map { case (pt, pts) => pts :+ pt }
-
-  val patterns: Parser[Seq[Pattern]] = (pattern ~ ("," ~ pattern).rep).map { case (pt, pts) => pt ++ pts.flatten }
 
 }
