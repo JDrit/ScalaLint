@@ -26,7 +26,7 @@ object Patterns {
   // variable x is the static type T of the pattern p. This pattern matches any value v matched
   // by the pattern p, provided the run-time type of v is also an instance of T, and it binds
   // the variable name to that value.
-  case class PatternBinder(name: Symbol, pattern: Pattern) extends Pattern
+  case class BindingPattern(name: Symbol, pattern: Pattern) extends Pattern
 
   // A literal pattern L matches any value that is equal (in terms of ==) to the literal L.
   // The type of L must conform to the expected type of the pattern.
@@ -46,15 +46,26 @@ object Patterns {
   // constructor are then taken as the expected types of the component patterns p1,…,pn. The
   // pattern matches all objects created from constructor invocations c(v1,…,vn) where each
   // element pattern pi matches the corresponding value vi.
-  case class ConstructorPattern(id: Symbol, patterns: Seq[Pattern]) extends Pattern
+  case class ConstructorPattern(id: Symbol, patterns: Pattern*) extends Pattern {
+
+    override def toString(): String = s"${id.toString.substring(1)}(${patterns.mkString(", ")}"
+  }
 
   // A tuple pattern (p1,…,pn) is an alias for the constructor pattern scala.Tuplen(p1,…,pn),
   // where n≥2. The empty tuple () is the unique value of type scala.Unit.
-  case class TuplePattern(patterns: Seq[Pattern]) extends Pattern
+  case class TuplePattern(patterns: Pattern*) extends Pattern
 
   // TODO look into this later
   // case class ExtractorPattern
 
   case class SequencePattern(id: Symbol, patterns: Seq[Pattern], wildCard: Option[Symbol]) extends Pattern
+
+  // A pattern alternative p1 | … | pn consists of a number of alternative patterns pi.
+  // All alternative patterns are type checked with the expected type of the pattern. They may
+  // not bind variables other than wildcards. The alternative pattern matches a value v if at
+  // least one its alternatives matches v.
+  case class AlternativePattern(patterns: Pattern*) extends Pattern {
+    override def toString(): String = patterns.mkString(" | ")
+  }
 }
 

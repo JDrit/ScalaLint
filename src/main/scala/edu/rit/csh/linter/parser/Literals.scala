@@ -1,6 +1,7 @@
 package edu.rit.csh.linter.parser
 
 import edu.rit.csh.linter.language.Literals._
+import fastparse.WhitespaceApi
 import fastparse.all._
 import fastparse.core.Parser
 
@@ -24,20 +25,14 @@ object Literals {
 
   // 1.1 Identifiers
 
-  private val idRest = P((letter | digit).rep.! ~ ("_" ~ op).!.?)
-    .map { case (rep, Some(o)) => rep + "_" + o
-           case (rep, None) => rep }
 
-  private val notInOp = Seq('\u0020', '\u0009', '\u000D', '\u000A', '$', '_', '(', ')', '[', ']',
-    '{', '}', '`', ''', '"', '.', ';', ',') ++ ('A' to 'Z') ++ ('a' to 'z') ++ ('0' to '9')
+  private val notInOp = Seq('\u0020', '\u0009', '\u000D', '\u000A', '$', '|', '_', '(', ')', '[', ']', '{', '}', '`', ''', '"', '.', ';', ',') ++ ('A' to 'Z') ++ ('a' to 'z') ++ ('0' to '9')
+  private val idRest = P((letter | digit).rep ~ ("_" ~ op).?).!
   private val inOp = '\u0020' to '\u007F'
 
   val op: Parser[Symbol] = P(CharComb(inOp, notInOp)).rep(1).!.map { case str => Symbol(str) }
-  val varId: Parser[Symbol] = P(lower.! ~ idRest.!).map { case (b, bs) => Symbol(b + bs) }
-  val plainId: Parser[Symbol] = P((upper.! ~ idRest.!).map { case (b, bs) => Symbol(b + bs) }
-                 | varId
-                 | op)
-
+  val varId: Parser[Symbol] = P(lower ~ idRest).!.map { case str => Symbol(str) }
+  val plainId: Parser[Symbol] = P((upper ~ idRest).!.map { case str => Symbol(str) } | varId | op)
 
   // 1.2 Newline Characters
 
@@ -87,6 +82,6 @@ object Literals {
     }
     | booleanLiteral | characterLiteral | stringLiteral | symbolLiteral | nullLiteral)
 
-  val id: Parser[Symbol] = "`" ~ stringLiteral.map { case s => Symbol(s.value) } ~ "`" | plainId
+  val id: Parser[Symbol] = P("`" ~ stringLiteral.map { case s => Symbol(s.value) } ~ "`" | plainId)
 
 }

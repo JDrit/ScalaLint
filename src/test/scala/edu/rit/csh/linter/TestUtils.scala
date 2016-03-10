@@ -9,7 +9,7 @@ object TestUtils extends FunSuite {
   def parse[T](str: String, parser: Parser[T], answer: T): Unit = {
     parser.parse(str) match {
       case Success(value, index) => assert(value === answer) ; assert(index === str.length)
-      case f : Failure => fail(s"failed to parse ($str), ${f.msg}")
+      case f : Failure => fail(s"failed to parse `$str`, ${f.msg}")
     }
   }
 

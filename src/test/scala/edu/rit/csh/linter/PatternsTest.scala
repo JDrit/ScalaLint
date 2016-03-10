@@ -1,6 +1,6 @@
 package edu.rit.csh.linter
 
-import edu.rit.csh.linter.language.Literals.{IntegerLiteral, StringLiteral}
+import edu.rit.csh.linter.language.Literals.{FloatingLiteral, IntegerLiteral, StringLiteral}
 import edu.rit.csh.linter.language.Patterns._
 import edu.rit.csh.linter.parser.Patterns
 import org.scalatest.FunSuite
@@ -16,48 +16,63 @@ class PatternsTest extends FunSuite {
   }
 
   test("literal pattern") {
-    parse("\"testing\"", Patterns.simplePattern, LiteralPattern(StringLiteral("testing")))
+    parse("\"testing 1 2 3\"", Patterns.simplePattern, LiteralPattern(StringLiteral("testing 1 2 3")))
     parse("-52", Patterns.simplePattern, LiteralPattern(IntegerLiteral(-52)))
   }
 
   test("stable ID pattern") {
     parse("this.id", Patterns.simplePattern, StableIdPattern(Symbol("this.id")))
+    parse("StableID", Patterns.simplePattern, StableIdPattern('StableID))
   }
 
   test("tuple pattern") {
-    parse("(x, y)", Patterns.simplePattern, TuplePattern(Seq(VariablePattern('x), VariablePattern('y))))
-    parse("(x, 5)", Patterns.simplePattern, TuplePattern(Seq(VariablePattern('x), LiteralPattern(IntegerLiteral(5)))))
+    parse("(x)", Patterns.tuplePattern, TuplePattern(VariablePattern('x)))
+    parse("(x,y)", Patterns.tuplePattern, TuplePattern(VariablePattern('x), VariablePattern('y)))
+    parse("(x,5)", Patterns.tuplePattern, TuplePattern(VariablePattern('x), LiteralPattern(IntegerLiteral(5))))
+  }
+
+  test("tuple pattern with spaces") {
+    parse("( x )", Patterns.tuplePattern, TuplePattern(VariablePattern('x)))
+    parse("( x , \"hi from JD\" )", Patterns.tuplePattern, TuplePattern(VariablePattern('x), LiteralPattern(StringLiteral("hi from JD"))))
+    parse("( x , 5 )", Patterns.tuplePattern, TuplePattern(VariablePattern('x), LiteralPattern(IntegerLiteral(5))))
   }
 
   test("sequence pattern") {
-    parse("StableId(x, xs@_*)", Patterns.simplePattern, SequencePattern('StableId, Seq(VariablePattern('x)), Some('xs)))
-    parse("Name( _*)", Patterns.simplePattern, SequencePattern('Name, Seq.empty, None))
-    parse("Name(one, two, 3, _*)", Patterns.simplePattern, SequencePattern('Name, Seq(VariablePattern('one), VariablePattern('two), VariablePattern('three)), None))
+    parse("StableID (_*)", Patterns.simplePattern, SequencePattern('StableID, Seq.empty, None))
+    parse("Id(x@_*)", Patterns.simplePattern, SequencePattern('Id, Seq.empty, Some('x)))
+    parse("Names(first, last, _*)", Patterns.sequencePattern, SequencePattern('Names, Seq(VariablePattern('first), VariablePattern('last)), None))
+    parse("Names(first, last, rest@_*)", Patterns.sequencePattern, SequencePattern('Names, Seq(VariablePattern('first), VariablePattern('last)), Some('rest)))
+    parse("Name2(x, _*)", Patterns.sequencePattern, SequencePattern('Name2, Seq(VariablePattern('x)), None))
     parseError("Error(one _*)", Patterns.simplePattern)
   }
 
-  test("Constructor pattern") {
-    parse("Tuple2(x1, x2)", Patterns.simplePattern, ConstructorPattern('Tuple2, Seq(VariablePattern('x1), VariablePattern('x2))))
+  test("constructor pattern") {
+    parse("Tuple2(x1, x2)", Patterns.simplePattern, ConstructorPattern('Tuple2, VariablePattern('x1), VariablePattern('x2)))
+    parse("Tuple2(x1, _)", Patterns.simplePattern, ConstructorPattern('Tuple2, VariablePattern('x1), VariablePattern('_)))
 
   }
-
-  test("pattern 1") {
-
+  test("typed patterns") {
+    // parse("ex: IOException", Patterns.pattern, TypedPattern('ex, ))
   }
 
-  test("pattern 2") {
-
+  test("binding patterns") {
+    parse("t @ (x1, x2)", Patterns.pattern, BindingPattern('t, TuplePattern(VariablePattern('x1), VariablePattern('x2))))
   }
 
-  test("pattern 3") {
-
+  test("infix operation patterns") {
+    parse("1 :: 2 :: 3", Patterns.pattern3, ConstructorPattern('::, LiteralPattern(IntegerLiteral(1)), ConstructorPattern('::, LiteralPattern(IntegerLiteral(2)), LiteralPattern(IntegerLiteral(3)))))
   }
 
-  test("pattern") {
-
+  test("alternative patterns") {
+    parse("2 | 3", Patterns.pattern, AlternativePattern(LiteralPattern(IntegerLiteral(2)), LiteralPattern(IntegerLiteral(3))))
+    parse("\"str\"", Patterns.pattern, LiteralPattern(StringLiteral("str")))
+    parseError("5 || 6", Patterns.pattern)
   }
 
-  test("patterns") {
-
+  test("pattern repeat") {
+    parse("(\"string\", 52), 4.5f", Patterns.patterns, Seq(
+      TuplePattern(LiteralPattern(StringLiteral("string")), LiteralPattern(IntegerLiteral(52))),
+      LiteralPattern(FloatingLiteral(4.5))))
   }
+
 }
