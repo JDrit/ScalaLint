@@ -14,27 +14,42 @@ object Patterns {
   // It matches any value, and binds the variable name to that value. The type of x is the
   // expected type of the pattern as given from outside. A special case is the wild-card
   // pattern _ which is treated as if it was a fresh variable on each occurrence.
-  case class VariablePattern(name: Symbol) extends Pattern
+  case class VariablePattern(name: Symbol) extends Pattern {
+
+    override def toString(): String = name.toString().substring(1)
+  }
 
   // A typed pattern x:T consists of a pattern variable x and a type pattern T. The type of x
   // is the type pattern T, where each type variable and wildcard is replaced by a fresh,
   // unknown type. This pattern matches any value matched by the type pattern T; it binds
   // the variable name to that value.
-  case class TypedPattern(name: Symbol, Typ: TypPat) extends Pattern
+  case class TypedPattern(name: Symbol, typ: TypPat) extends Pattern {
+
+    override def toString(): String = s"$name : $typ"
+  }
 
   // A pattern binder x@p consists of a pattern variable x and a pattern p. The type of the
   // variable x is the static type T of the pattern p. This pattern matches any value v matched
   // by the pattern p, provided the run-time type of v is also an instance of T, and it binds
   // the variable name to that value.
-  case class BindingPattern(name: Symbol, pattern: Pattern) extends Pattern
+  case class BindingPattern(name: Symbol, pattern: Pattern) extends Pattern {
+
+    override def toString(): String = s"$name @ $pattern"
+  }
 
   // A literal pattern L matches any value that is equal (in terms of ==) to the literal L.
   // The type of L must conform to the expected type of the pattern.
-  case class LiteralPattern[T](literal: Literal[T]) extends Pattern
+  case class LiteralPattern[T](literal: Literal[T]) extends Pattern {
+
+    override def toString(): String = literal.toString
+  }
 
   // A stable identifier pattern is a stable identifier r. The type of r must conform to the
   // expected type of the pattern. The pattern matches any value v such that r == v
-  case class StableIdPattern(id: Symbol) extends Pattern
+  case class StableIdPattern(id: Symbol) extends Pattern {
+
+    override def toString(): String = id.toString().substring(1)
+  }
 
   // A constructor pattern is of the form c(p1,…,pn) where n≥0. It consists of a stable identifier
   // c, followed by element patterns p1,…,pn. The constructor c is a simple or qualified name
@@ -48,17 +63,26 @@ object Patterns {
   // element pattern pi matches the corresponding value vi.
   case class ConstructorPattern(id: Symbol, patterns: Pattern*) extends Pattern {
 
-    override def toString(): String = s"${id.toString.substring(1)}(${patterns.mkString(", ")}"
+    override def toString(): String = s"${id.toString.substring(1)}(${patterns.mkString(", ")})"
   }
 
   // A tuple pattern (p1,…,pn) is an alias for the constructor pattern scala.Tuplen(p1,…,pn),
   // where n≥2. The empty tuple () is the unique value of type scala.Unit.
-  case class TuplePattern(patterns: Pattern*) extends Pattern
+  case class TuplePattern(patterns: Pattern*) extends Pattern {
+
+    override def toString(): String = s"(${patterns.mkString(", ")})"
+  }
 
   // TODO look into this later
   // case class ExtractorPattern
 
-  case class SequencePattern(id: Symbol, patterns: Seq[Pattern], wildCard: Option[Symbol]) extends Pattern
+  case class SequencePattern(id: Symbol, patterns: Seq[Pattern], wildCard: Option[Symbol]) extends Pattern {
+
+      override def toString(): String = wildCard match {
+      case Some(sym) => s"${id.toString().substring(1)}(${patterns.mkString(", ")}, ${sym.toString().substring(1)}@_*)"
+      case None => s"${id.toString().substring(1)}(${patterns.mkString(", ")}, _*)"
+    }
+  }
 
   // A pattern alternative p1 | … | pn consists of a number of alternative patterns pi.
   // All alternative patterns are type checked with the expected type of the pattern. They may

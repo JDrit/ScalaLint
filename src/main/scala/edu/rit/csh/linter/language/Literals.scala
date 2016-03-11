@@ -3,7 +3,9 @@ package edu.rit.csh.linter.language
 
 object Literals {
 
-  abstract class Literal[T](value: T)
+  abstract class Literal[T](value: T) {
+    override def toString(): String = value.toString
+  }
 
   case class IntegerLiteral(val value: Int) extends Literal[Int](value: Int)
 

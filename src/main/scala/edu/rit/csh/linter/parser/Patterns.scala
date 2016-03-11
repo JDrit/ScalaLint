@@ -9,7 +9,6 @@ object Patterns {
   import Types._
   import Literals._
 
-
   val whitespace = WhitespaceApi.Wrapper{
     import fastparse.all._
     NoTrace(" ".rep)
@@ -41,7 +40,7 @@ object Patterns {
     .map { case (id, patts) => ConstructorPattern(id, patts.getOrElse(Seq.empty):_*) })
   val tuplePattern: Parser[TuplePattern] = P("(" ~ patterns ~ ")").map { case pts => TuplePattern(pts:_*) }
   val sequencePattern = P(stableId ~ "(" ~ (variablePattern ~ ",").rep  ~ (varId ~ "@").? ~ "_" ~ "*" ~ ")")
-    .map { case (sid, pts, varid) => SequencePattern(sid, pts, varid) }.opaque("could not parse sequence pattern")
+    .map { case (sid, pts, varid) => SequencePattern(sid, pts, varid) }
 
   val simplePattern: Parser[Pattern] =
       P( tuplePattern
@@ -58,6 +57,7 @@ object Patterns {
   }
 
   private def toConstructor(start: Pattern, input: List[(Symbol, Pattern)]): Pattern = input match {
+    case Nil => throw new RuntimeException("entered empty list")
     case (op, sp) :: Nil => ConstructorPattern(op, start, sp)
     case (op, sp) :: pts => ConstructorPattern(op, start, toConstructor(sp, pts))
   }
@@ -74,11 +74,4 @@ object Patterns {
     case (pt, Nil) => pt
     case (p1, pts) => AlternativePattern(pts.+:(p1):_*)
   }
-
-
-
-
-
-
-
 }

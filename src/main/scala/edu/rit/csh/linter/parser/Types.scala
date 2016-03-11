@@ -20,35 +20,33 @@ object Types {
 
   val stableId: Parser[Symbol] = P(((id ~ ".").? ~ ("this" ~ "." ~ id | "super" ~ classQualifier.? ~ "." ~ id) | id) ~ ("." ~ id).rep).!.map { case str => Symbol(str) }
 
-  val path: Parser[Symbol] = (stableId | (id ~ ".").? ~ "this").!.map { case str => Symbol(str) }
+  val path: Parser[Symbol] = P(stableId | (id ~ ".").? ~ "this").!.map { case str => Symbol(str) }
 
   val simpleType: Parser[SimpleType] = {
-    val left =
-      ( stableId.map { TypeDesignator }
-      | (path ~ "." ~ typ).map { SingletonType.tupled }
-      | "(" ~ types.map { TupleType } ~ ")"
-      )
+    val left = P(
+        path.!.filter(_.endsWith(".type")).map { case str => SingletonType(Symbol(str.substring(0, str.length - 5))) }
+      | stableId.map { TypeDesignator }
+      | "(" ~ types.map { case typs => TupleType(typs: _*) } ~ ")")
 
-    (left ~ typeArgs.?).map {
-      case (st, Some(args)) => ParameterizedType(st, args)
+    P(left ~ (typeArgs | "#" ~ id).?).map {
       case (st, None) => st
-    } | (left ~ id.?).map {
-        case (st, Some(idStr)) => TypeProjection(st, idStr)
-        case (st, None) => st
-      }
+      case (st, Some(id: Symbol)) => TypeProjection(st, id)
+      case (st, Some(args: Seq[Typ])) => ParameterizedType(st, args: _*)
+    }
   }
+
 
   // 3.2.6 Annotated Types
 
   // AnnotType  ::=  SimpleType {Annotation}
   val annotType: Parser[AnnotatedType] = (simpleType ~ annotation.rep)
-    .map { AnnotatedType.tupled }
+    .map { case (tp, attos) => AnnotatedType(tp, attos:_*) }
 
   // 3.2.7 Compound Types
 
   // TODO
   val compoundType: Parser[CompoundType] =
-    (annotType ~ ("with" ~ annotType).rep).map { case (at, ats) => CompoundType(ats :+ at) }
+    (annotType ~ ("with" ~ annotType).rep).map { case (at, ats) => CompoundType(ats :+ at :_*) }
 
   // 3.2.8
 

@@ -15,7 +15,9 @@ object Types {
   // A singleton type is of the form p.type, where p is a path pointing to a value expected
   // to conform to scala.AnyRef. The type denotes the set of values consisting of null and
   // the value denoted by p.
-  case class SingletonType(path: Symbol, typ: Typ) extends SimpleType
+  case class SingletonType(path: Symbol) extends SimpleType {
+    override def toString(): String = s"${path.toString().substring(1)}.type"
+  }
 
   // A type projection T#x references the type member named x of type T.
   case class TypeProjection(typ: SimpleType, id: Symbol) extends SimpleType
@@ -26,20 +28,20 @@ object Types {
 
   // A parameterized type T[T1,…,Tn] consists of a type designator T and type parameters T1,…,Tn
   // where n≥1. T must refer to a type constructor which takes n type parameters a1,…,an.
-  case class ParameterizedType(typ: SimpleType, args: Seq[Typ]) extends SimpleType
+  case class ParameterizedType(typ: SimpleType, args: Typ*) extends SimpleType
 
   // A tuple type (T1,…,Tn) is an alias for the class scala.Tuplen[T1, … , Tn], where n≥2.
-  case class TupleType(typs: Seq[Typ]) extends SimpleType
+  case class TupleType(typs: Typ*) extends SimpleType
 
   // An annotated type T a1,…,an attaches annotations a1,…,an to the type T.
-  case class AnnotatedType(typ: SimpleType, annotations: Seq[Annotation]) extends Typ
+  case class AnnotatedType(typ: SimpleType, annotations: Annotation*) extends Typ
 
   // A compound type T1 with … with Tn{R} represents objects with members as given in the
   // component types T1,…,Tn and the refinement {R}. A refinement {R} contains declarations
   // and type definitions. If a declaration or definition overrides a declaration or definition
   // in one of the component types T1,…,Tn, the usual rules for overriding apply; otherwise the
   // declaration or definition is said to be “structural”
-  case class CompoundType(tys: Seq[AnnotatedType]) extends Typ
+  case class CompoundType(tys: AnnotatedType*) extends Typ
 
   // An infix type T1 op T2 consists of an infix operator op which gets applied to two
   // type operands T1 and T2. The type is equivalent to the type application op[T1,T2].

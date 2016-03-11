@@ -74,5 +74,4 @@ class PatternsTest extends FunSuite {
       TuplePattern(LiteralPattern(StringLiteral("string")), LiteralPattern(IntegerLiteral(52))),
       LiteralPattern(FloatingLiteral(4.5))))
   }
-
 }
