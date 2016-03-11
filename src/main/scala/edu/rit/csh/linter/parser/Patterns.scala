@@ -21,7 +21,7 @@ object Patterns {
   // 8.2 Type Patterns
   val typPat = typ
 
-  val patterns: Parser[Seq[Pattern]] = P((pattern ~ ("," ~ pattern).rep).map { case (pt, pts) => pts.+:(pt) })
+  val patterns: Parser[Seq[Pattern]] = P(pattern.rep(min = 1, sep = ","))
 
   val literalPattern = P(literal.map { case lit => LiteralPattern(lit) })
   val variablePattern = P(varId | wildCard).map { VariablePattern }
@@ -52,12 +52,11 @@ object Patterns {
        )
 
   val pattern3: Parser[Pattern] = P(simplePattern ~ (id ~ nl.? ~ simplePattern).rep).map {
-    case (sp, Nil) => sp
     case (sp, lst) => toConstructor(sp, lst.toList)
   }
 
   private def toConstructor(start: Pattern, input: List[(Symbol, Pattern)]): Pattern = input match {
-    case Nil => throw new RuntimeException("entered empty list")
+    case Nil => start
     case (op, sp) :: Nil => ConstructorPattern(op, start, sp)
     case (op, sp) :: pts => ConstructorPattern(op, start, toConstructor(sp, pts))
   }

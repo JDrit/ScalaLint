@@ -1,6 +1,7 @@
 package edu.rit.csh.linter
 
-import edu.rit.csh.linter.language.Types.{ParameterizedType, TypeProjection, SingletonType, TypeDesignator}
+import edu.rit.csh.linter.language.Annotations.Annotation
+import edu.rit.csh.linter.language.Types._
 import edu.rit.csh.linter.parser.Types
 import org.scalatest.FunSuite
 
@@ -40,12 +41,9 @@ class TypesTest extends FunSuite {
 
   }
 
-  test("annotations") {
-
-  }
 
   test("annotated types") {
-
+    parse("String @local", Types.annotType, AnnotatedType(TypeDesignator('String), Annotation(TypeDesignator('local))))
   }
 
   test("singleton types") {
@@ -65,13 +63,32 @@ class TypesTest extends FunSuite {
 
   test("parameterized types") {
     parse("TreeMap[I, String]", Types.simpleType, ParameterizedType(TypeDesignator('TreeMap), TypeDesignator('I), TypeDesignator('String)))
+    parse("TreeMap[List[I], Int]", Types.simpleType, ParameterizedType(TypeDesignator('TreeMap), ParameterizedType(TypeDesignator('List), TypeDesignator('I)), TypeDesignator('Int)))
+    parseError("TreeMap[I String]", Types.simpleType)
+  }
+
+  test("tuple types") {
+    parse("(String, Int)", Types.simpleType, TupleType(TypeDesignator('String), TypeDesignator('Int)))
+    parseError("()", Types.simpleType)
   }
 
   test("compound types") {
 
   }
 
+  test("compound type refinement") {
+
+  }
+
   test("infix types") {
+
+  }
+
+  test("function types") {
+
+  }
+
+  test("existential types") {
 
   }
 }

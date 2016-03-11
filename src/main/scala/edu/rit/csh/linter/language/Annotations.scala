@@ -6,5 +6,5 @@ import edu.rit.csh.linter.language.Types.SimpleType
 
 object Annotations {
 
-  case class Annotation(typ: SimpleType, args: Seq[Seq[Expression]])
+  case class Annotation(typ: SimpleType, args: Expression*)
 }

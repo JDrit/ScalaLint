@@ -8,6 +8,9 @@ object Annotations {
   import Types._
   import Expressions._
 
-  val annotation: Parser[Annotation] = ("@" ~ simpleType ~ argumentExprs.rep).map { Annotation.tupled }
+  val annotation: Parser[Annotation] = ("@" ~ simpleType ~ argumentExprs.?).map {
+    case (st, Some(exps)) => Annotation(st, exps:_*)
+    case (st, None) => Annotation(st)
+  }
 
 }
