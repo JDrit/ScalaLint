@@ -2,7 +2,6 @@ package edu.rit.csh.linter.language
 
 import edu.rit.csh.linter.language.Annotations.Annotation
 import edu.rit.csh.linter.language.Declarations.Declaration
-import edu.rit.csh.linter.language.Expressions.Expression
 
 /**
   * Created by jd on 3/4/16.
@@ -11,31 +10,29 @@ object Types {
 
   abstract class Typ
 
-  abstract class SimpleType extends Typ
-
   // A singleton type is of the form p.type, where p is a path pointing to a value expected
   // to conform to scala.AnyRef. The type denotes the set of values consisting of null and
   // the value denoted by p.
-  case class SingletonType(path: Symbol) extends SimpleType {
+  case class SingletonType(path: Symbol) extends Typ {
     override def toString(): String = s"${path.toString().substring(1)}.type"
   }
 
   // A type projection T#x references the type member named x of type T.
-  case class TypeProjection(typ: SimpleType, id: Symbol) extends SimpleType
+  case class TypeProjection(typ: Typ, id: Symbol) extends Typ
 
   // A type designator refers to a named value type. It can be simple or qualified.
   // All such type designators are shorthands for type projections.
-  case class TypeDesignator(stableId: Symbol) extends SimpleType
+  case class TypeDesignator(stableId: Symbol) extends Typ
 
   // A parameterized type T[T1,…,Tn] consists of a type designator T and type parameters T1,…,Tn
   // where n≥1. T must refer to a type constructor which takes n type parameters a1,…,an.
-  case class ParameterizedType(typ: SimpleType, args: Typ*) extends SimpleType
+  case class ParameterizedType(typ: Typ, args: Typ*) extends Typ
 
   // A tuple type (T1,…,Tn) is an alias for the class scala.Tuplen[T1, … , Tn], where n≥2.
-  case class TupleType(typs: Typ*) extends SimpleType
+  case class TupleType(typs: Typ*) extends Typ
 
   // An annotated type T a1,…,an attaches annotations a1,…,an to the type T.
-  case class AnnotatedType(typ: SimpleType, annotations: Annotation*) extends Typ
+  case class AnnotatedType(typ: Typ, annotations: Annotation*) extends Typ
 
   // A compound type T1 with … with Tn{R} represents objects with members as given in the
   // component types T1,…,Tn and the refinement {R}. A refinement {R} contains declarations
@@ -56,5 +53,9 @@ object Types {
   // Type variables which occur in a type T but which are not bound in T are said to be free in T.
   case class ExistentialType(typ: Typ, typDeclarations: Declaration*) extends Typ
 
-  case class FunctionType(types: Seq[Typ], result: Typ) extends Typ
+  // The type (T1,…,Tn)⇒U represents the set of function values that take arguments of types
+  // T1,…,Tn and yield results of type U. In the case of exactly one argument type T⇒U is a
+  // shorthand for (T)⇒U. An argument type of the form ⇒T represents a call-by-name parameter of
+  // type T. Function types associate to the right, e.g. S⇒T⇒U is the same as S⇒(T⇒U)
+  case class FunctionType(argument: Typ, result: Typ) extends Typ
 }

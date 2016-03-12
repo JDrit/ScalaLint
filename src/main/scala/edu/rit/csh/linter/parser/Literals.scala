@@ -4,6 +4,7 @@ import edu.rit.csh.linter.language.Literals._
 import fastparse.WhitespaceApi
 import fastparse.all._
 import fastparse.core.Parser
+import fastparse.parsers.Combinators.Not
 
 object Literals {
 
@@ -30,7 +31,14 @@ object Literals {
   private val idRest = P((letter | digit).rep ~ ("_" ~ op).?).!
   private val inOp = '\u0020' to '\u007F'
 
-  val op: Parser[Symbol] = P(CharComb(inOp, notInOp)).rep(1).!.map { case str => Symbol(str) }
+  val reservedWords = Set("abstract", "case", "catch", "class", "def", "do",
+    "else", "extends", "false", "final", "finally", "for", "forSome", "if",
+    "implicit", "import", "lazy", "macro", "match", "new", "null", "object",
+    "override", "package", "private", "protected", "return", "sealed", "super",
+    "this", "throw", "trait", "try", "true", "type", "val", "var", "while",
+    "with", "yield", "_", ":", "=", "=>", "<-", "<:", "<%", ">:", "#", "@")
+
+  val op: Parser[Symbol] = P(CharComb(inOp, notInOp).rep(min = 1)).!.filter(str => !reservedWords.contains(str)).map { case str => Symbol(str) }
   val varId: Parser[Symbol] = P(lower ~ idRest).!.map { case str => Symbol(str) }
   val plainId: Parser[Symbol] = P((upper ~ idRest).!.map { case str => Symbol(str) } | varId | op)
 

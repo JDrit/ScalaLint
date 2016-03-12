@@ -21,21 +21,19 @@ object Types {
 
   val types = P(typ.rep(min = 1, sep = ","))
 
-  val typeArgs: Parser[Seq[Typ]] = P("[" ~/ types ~/ "]")
-
   val classQualifier = P("[" ~/ id ~/ "]")
 
   val stableId: Parser[Symbol] = P(((id ~ ".").? ~ ("this" ~ "." ~ id | "super" ~ classQualifier.? ~ "." ~ id) | id) ~ ("." ~ id).rep).!.map { case str => Symbol(str) }
 
   val path: Parser[Symbol] = P(stableId | (id ~ ".").? ~ "this").!.map { case str => Symbol(str) }
 
-  val simpleType: Parser[SimpleType] = {
+  val simpleType: Parser[Typ] = {
     val left = P(
-      ("(" ~/ types ~ ")").map { case typs => TupleType(typs: _*) }
+      ("(" ~/ types ~ ")").map { case tys => if (tys.length == 1) tys.head else TupleType(tys:_*) }
       | path.!.filter(_.endsWith(".type")).map { case str => SingletonType(Symbol(str.substring(0, str.length - 5))) }
       | stableId.map { TypeDesignator })
 
-    P(left ~ (typeArgs | "#" ~ id).?).map {
+    P(left ~ ("[" ~/ types ~/ "]" | "#" ~/ id).?).map {
       case (st, Some(id: Symbol)) => TypeProjection(st, id)
       case (st, Some(args: Seq[_])) => ParameterizedType(st, args.asInstanceOf[Seq[Typ]]: _*)
       case (st, _) => st
@@ -79,8 +77,8 @@ object Types {
 
   // 3.2.9 Function Types
 
-  val functionArgs: Parser[Seq[Typ]] =
-    P( infixType.map { ty => Seq(ty) } | ("(" ~/ paramType.rep(min = 0, sep = ",") ~/ ")"))
+  val functionArgs: Parser[Typ] =
+    P( infixType | ("(" ~ paramType.rep(min = 0, sep = ",").map { case tys => TupleType(tys:_*) } ~ ")"))
 
   // 3.2.10 Existential Types
 
@@ -89,11 +87,14 @@ object Types {
   val existentialClause: Parser[Seq[Declaration]] = P("forSome" ~ "{" ~ existentialDcl.rep(min = 1, sep = ";") ~ "}")
 
   val typ: Parser[Typ] =
-    P( (functionArgs ~ "=>" ~/ typ).map { FunctionType.tupled }
-     | (infixType ~ existentialClause.?).map {
-          case (it, None) => it
-          case (it, Some(ec)) => ExistentialType(it, ec:_*)
-       }
-     )
-
+    P(
+      (infixType ~ ("=>" ~ typ | existentialClause.?)).map {
+        case (infix, typ: Typ) => FunctionType(infix, typ)
+        case (infix, Some(eclause: Seq[_])) => ExistentialType(infix, eclause.asInstanceOf[Seq[Declaration]]:_*)
+        case (infix, None) => infix
+      }
+      | ("(" ~ paramType.rep(min = 0, sep = ",") ~ ")" ~ "=>" ~ typ).map {
+        case (argument, result) => FunctionType(TupleType(argument:_*), result)
+      }
+    )
 }

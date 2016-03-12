@@ -73,6 +73,7 @@ class TypesTest extends FunSuite {
 
   test("tuple types") {
     parse("(String, Int)", Types.simpleType, TupleType(TypeDesignator('String), TypeDesignator('Int)))
+    parse("(String)", Types.simpleType, TypeDesignator('String))
     parseError("()", Types.simpleType)
   }
 
@@ -100,12 +101,14 @@ class TypesTest extends FunSuite {
   test("function types") {
     parse("String", Types.typ, TypeDesignator('String))
     parse("String Pair Int", Types.typ, InfixType(TypeDesignator('String), 'Pair, TypeDesignator('Int)))
-    parse("Int => Int", Types.typ, FunctionType(Seq(TypeDesignator('Int)), TypeDesignator('Int)))
-    parse("(Int) => Int", Types.typ, FunctionType(Seq(TypeDesignator('Int)), TypeDesignator('Int)))
+    parse("Int => Int", Types.typ, FunctionType(TypeDesignator('Int), TypeDesignator('Int)))
+    parse("(Int) => Int", Types.typ, FunctionType(TypeDesignator('Int), TypeDesignator('Int)))
+    parse("(Int, String) => Int", Types.typ, FunctionType(TupleType(TypeDesignator('Int), TypeDesignator('String)), TypeDesignator('Int)))
+    parse("(Int, String) => Int => String", Types.typ, FunctionType(TupleType(TypeDesignator('Int), TypeDesignator('String)), FunctionType(TypeDesignator('Int), TypeDesignator('String))))
   }
 
   test("existential types") {
-    parse("X forsome { type X }", Types.typ, ExistentialType(TypeDesignator('X), TypeDcl('X)))
-    parse("VirtualMachine[A] forSome {type A}", Types.typ, ExistentialType(ParameterizedType(TypeDesignator('VirtaulMachine), TypeDesignator('A)), TypeDcl('A)))
+    parse("X forSome { type X }", Types.typ, ExistentialType(TypeDesignator('X), TypeDcl('X)))
+    parse("VirtualMachine[A] forSome { type A }", Types.typ, ExistentialType(ParameterizedType(TypeDesignator('VirtualMachine), TypeDesignator('A)), TypeDcl('A)))
   }
 }
