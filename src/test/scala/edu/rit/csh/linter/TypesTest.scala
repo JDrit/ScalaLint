@@ -1,7 +1,7 @@
 package edu.rit.csh.linter
 
 import edu.rit.csh.linter.language.Annotations.Annotation
-import edu.rit.csh.linter.language.Declarations.{RegularParameter, RegularParamType, FunDcl, ValDcl}
+import edu.rit.csh.linter.language.Declarations._
 import edu.rit.csh.linter.language.Types._
 import edu.rit.csh.linter.parser.Types
 import org.scalatest.FunSuite
@@ -44,7 +44,7 @@ class TypesTest extends FunSuite {
 
 
   test("annotated types") {
-    parse("String", Types.annotType, AnnotatedType(TypeDesignator('String)))
+    parse("String", Types.annotType, TypeDesignator('String))
     parse("String @local", Types.annotType, AnnotatedType(TypeDesignator('String), Annotation(TypeDesignator('local))))
   }
 
@@ -64,8 +64,10 @@ class TypesTest extends FunSuite {
   }
 
   test("parameterized types") {
-    parse("TreeMap[I, String]", Types.simpleType, ParameterizedType(TypeDesignator('TreeMap), TypeDesignator('I), TypeDesignator('String)))
-    parse("TreeMap[List[I], Int]", Types.simpleType, ParameterizedType(TypeDesignator('TreeMap), ParameterizedType(TypeDesignator('List), TypeDesignator('I)), TypeDesignator('Int)))
+    parse("TreeMap[I, String]", Types.simpleType, ParameterizedType(TypeDesignator('TreeMap),
+      TypeDesignator('I), TypeDesignator('String)))
+    parse("TreeMap[List[I], Int]", Types.simpleType, ParameterizedType(TypeDesignator('TreeMap),
+      ParameterizedType(TypeDesignator('List), TypeDesignator('I)), TypeDesignator('Int)))
     parseError("TreeMap[I String]", Types.simpleType)
   }
 
@@ -75,26 +77,35 @@ class TypesTest extends FunSuite {
   }
 
   test("compound types") {
-    parse("String", Types.compoundType, CompoundType(Seq(AnnotatedType(TypeDesignator('String))), Seq.empty))
-    parse("Cloneable with Resetable", Types.compoundType, CompoundType(Seq(AnnotatedType(TypeDesignator('Cloneable)), AnnotatedType(TypeDesignator('Resetable))), Seq.empty))
+    parse("String", Types.compoundType, TypeDesignator('String))
+    parse("Cloneable with Resetable", Types.compoundType, CompoundType(Seq(TypeDesignator('Cloneable),
+      TypeDesignator('Resetable)), Seq.empty))
+    parse("Cloneable with Resetable with Showable", Types.compoundType, CompoundType(Seq(
+      TypeDesignator('Cloneable), TypeDesignator('Resetable), TypeDesignator('Showable)), Seq.empty))
   }
 
   test("compound type with refinement") {
-    parse("{ val callsign: String }", Types.compoundType, CompoundType(Seq.empty, Seq(ValDcl(Seq('callsign), TypeDesignator('String)))))
+    parse("{ val callsign: String }", Types.compoundType, CompoundType(Seq.empty, Seq(ValDcl(
+      Seq('callsign), TypeDesignator('String)))))
     parse("{ val callsign: String; def fly(height: Int): Unit }", Types.compoundType, CompoundType(Seq.empty,
       Seq(ValDcl(Seq('callsign), TypeDesignator('String)), FunDcl('fly, Seq.empty,
         Seq(Seq(RegularParameter(Seq.empty, 'height, Some(RegularParamType(TypeDesignator('Int))), None))), TypeDesignator('Unit)))))
   }
 
   test("infix types") {
-
+    parse("String Pair Int", Types.infixType, InfixType(TypeDesignator('String), 'Pair, TypeDesignator('Int)))
+    parse("String", Types.infixType, TypeDesignator('String))
   }
 
   test("function types") {
-
+    parse("String", Types.typ, TypeDesignator('String))
+    parse("String Pair Int", Types.typ, InfixType(TypeDesignator('String), 'Pair, TypeDesignator('Int)))
+    parse("Int => Int", Types.typ, FunctionType(Seq(TypeDesignator('Int)), TypeDesignator('Int)))
+    parse("(Int) => Int", Types.typ, FunctionType(Seq(TypeDesignator('Int)), TypeDesignator('Int)))
   }
 
   test("existential types") {
-
+    parse("X forsome { type X }", Types.typ, ExistentialType(TypeDesignator('X), TypeDcl('X)))
+    parse("VirtualMachine[A] forSome {type A}", Types.typ, ExistentialType(ParameterizedType(TypeDesignator('VirtaulMachine), TypeDesignator('A)), TypeDcl('A)))
   }
 }

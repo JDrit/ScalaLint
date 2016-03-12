@@ -42,12 +42,19 @@ object Types {
   // and type definitions. If a declaration or definition overrides a declaration or definition
   // in one of the component types T1,…,Tn, the usual rules for overriding apply; otherwise the
   // declaration or definition is said to be “structural”
-  case class CompoundType(tys: Seq[AnnotatedType], refinements: Seq[Declaration]) extends Typ
+  case class CompoundType(tys: Seq[Typ], refinements: Seq[Declaration]) extends Typ
 
   // An infix type T1 op T2 consists of an infix operator op which gets applied to two
   // type operands T1 and T2. The type is equivalent to the type application op[T1,T2].
   // The infix operator op may be an arbitrary identifier.
-  case class InfixType(left: Typ, right: Option[(Symbol, Typ)]) extends Typ
+  case class InfixType(left: Typ, operation: Symbol, right: Typ) extends Typ
+
+  // An existential type has the form T forSome { Q } where Q is a sequence of type declarations.
+  // Let t1[tps1]>:L1<:U1,…,tn[tpsn]>:Ln<:Un be the types declared in Q (any of the type parameter
+  // sections [ tpsi ] might be missing). The scope of each type ti includes the type T and the
+  // existential clause Q. The type variables ti are said to be bound in the type T forSome { Q }.
+  // Type variables which occur in a type T but which are not bound in T are said to be free in T.
+  case class ExistentialType(typ: Typ, typDeclarations: Declaration*) extends Typ
 
   case class FunctionType(types: Seq[Typ], result: Typ) extends Typ
 }

@@ -28,7 +28,7 @@ object Declarations {
   // which L<:T<:U. It is a compile-time error if L does not conform to U. Either or both bounds
   // may be omitted. If the lower bound L is absent, the bottom type scala.Nothing is assumed. If
   // the upper bound U is absent, the top type scala.Any is assumed.
-  case class TypeDcl(id: Symbol, typParams: Seq[VariantTypeParam], lowerBound: Option[Typ] = None,
+  case class TypeDcl(id: Symbol, typParams: Seq[VariantTypeParam] = Seq.empty, lowerBound: Option[Typ] = None,
                      upperBound: Option[Typ] = None) extends Declaration
 
   case class VariantTypeParam(annotations: Seq[Annotation], variance: Option[Dependency.Value],

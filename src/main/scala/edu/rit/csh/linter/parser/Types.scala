@@ -2,6 +2,7 @@ package edu.rit.csh.linter.parser
 
 
 import edu.rit.csh.linter.language.Declarations.Declaration
+import edu.rit.csh.linter.language.Patterns.{ConstructorPattern, Pattern}
 import edu.rit.csh.linter.language.Types._
 import fastparse.WhitespaceApi
 import fastparse.all._
@@ -18,7 +19,7 @@ object Types {
   }
   import whitespace._
 
-  val types = P(typ ~ ("," ~ typ).rep).map { case (ty, tys) => tys :+ ty }
+  val types = P(typ.rep(min = 1, sep = ","))
 
   val typeArgs: Parser[Seq[Typ]] = P("[" ~/ types ~/ "]")
 
@@ -44,39 +45,42 @@ object Types {
   // 3.2.6 Annotated Types
 
   // AnnotType  ::=  SimpleType {Annotation}
-  val annotType: Parser[AnnotatedType] = P(simpleType ~ annotation.rep)
-    .map { case (tp, attos) => AnnotatedType(tp, attos:_*) }
+  val annotType: Parser[Typ] = P(simpleType ~ annotation.rep).map {
+    case (tp, Nil) => tp
+    case (tp, attos) => AnnotatedType(tp, attos:_*)
+  }
 
   // 3.2.7 Compound Types
 
   val refineStat: Parser[Declaration] = P(dcl | "type" ~ typeDef)
 
-  val refinement = P(nl.? ~ "{" ~ refineStat.rep(min = 1, sep = ";") ~ "}")
+  val refinement: Parser[Seq[Declaration]] = P(nl.? ~ "{" ~ refineStat.rep(min = 1, sep = ";") ~ "}")
 
-  val compoundType: Parser[CompoundType] =
-    P( (annotType.rep(min = 1, sep = "with") ~ refinement.?).map { case (ats, refine) =>
-          CompoundType(ats, refine.getOrElse(Seq.empty))
-        }
+  val compoundType: Parser[Typ] =
+    P( (annotType.rep(min = 1, sep = "with") ~ refinement.?).map {
+        case (ats, None) => if (ats.length == 1) ats.head
+                            else CompoundType(ats, Seq.empty)
+        case (ats, Some(refines)) => CompoundType(ats, refines)
+      }
      | refinement.map { case refine => CompoundType(Seq.empty, refine)} )
 
   // 3.2.8
 
-  // InfixType ::= CompoundType {id [nl] CompoundType}
-  val infixType = P(compoundType ~ (id ~ nl.? ~ compoundType).rep).map {
-    case (ct, cts) => cts.foldLeft(InfixType(ct, None)) { case (left, (op, right)) =>
-      InfixType(left, Some(op, right))
-    }
+  val infixType: Parser[Typ] = P(compoundType ~ (id ~ nl.? ~ compoundType).rep).map {
+    case (ct, Nil) => ct
+    case (ct, cts) => toInfix(ct, cts.toList)
+  }
+
+  private def toInfix(start: Typ, input: List[(Symbol, Typ)]): Typ = input match {
+    case Nil => start
+    case (op, sp) :: Nil => InfixType(start, op, sp)
+    case (op, sp) :: pts => InfixType(start, op, toInfix(sp, pts))
   }
 
   // 3.2.9 Function Types
 
   val functionArgs: Parser[Seq[Typ]] =
-    P( infixType.map { ty => Seq(ty) }
-     | ("(" ~/ (paramType ~ ("," ~ paramType).rep).? ~/ ")").map {
-        case Some((pt, pts)) => pts.:+(pt)
-        case None => Seq.empty
-       }
-     )
+    P( infixType.map { ty => Seq(ty) } | ("(" ~/ paramType.rep(min = 0, sep = ",") ~/ ")"))
 
   // 3.2.10 Existential Types
 
@@ -86,7 +90,10 @@ object Types {
 
   val typ: Parser[Typ] =
     P( (functionArgs ~ "=>" ~/ typ).map { FunctionType.tupled }
-     | (infixType ~ existentialClause.?).map { case (infix, eClause) => }
+     | (infixType ~ existentialClause.?).map {
+          case (it, None) => it
+          case (it, Some(ec)) => ExistentialType(it, ec:_*)
+       }
      )
 
 }
