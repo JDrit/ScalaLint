@@ -1,6 +1,7 @@
 package edu.rit.csh.linter.language
 
 import edu.rit.csh.linter.language.Annotations.Annotation
+import edu.rit.csh.linter.language.Declarations.Declaration
 import edu.rit.csh.linter.language.Expressions.Expression
 
 /**
@@ -41,7 +42,7 @@ object Types {
   // and type definitions. If a declaration or definition overrides a declaration or definition
   // in one of the component types T1,…,Tn, the usual rules for overriding apply; otherwise the
   // declaration or definition is said to be “structural”
-  case class CompoundType(tys: AnnotatedType*) extends Typ
+  case class CompoundType(tys: Seq[AnnotatedType], refinements: Seq[Declaration]) extends Typ
 
   // An infix type T1 op T2 consists of an infix operator op which gets applied to two
   // type operands T1 and T2. The type is equivalent to the type application op[T1,T2].

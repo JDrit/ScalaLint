@@ -10,17 +10,6 @@ import org.scalatest.FunSuite
 
 class DeclarationsTest extends FunSuite {
   import TestUtils._
-  /**
-    * [S, T]
-    * [@specialized T, U]
-    * [Ex <: Throwable]
-    * [A <: Comparable[B], B <: A]
-    * [A, B >: A, C >: A <: B]
-    * [M[X], N[X]]
-    * [M[_], N[_]] // equivalent to previous clause
-    * [M[X <: Bound[X]], Bound[_]]
-    * [M[+X] <: Iterable[X]]
-    */
 
   test("value declaration") {
 
@@ -54,8 +43,12 @@ class DeclarationsTest extends FunSuite {
 
   }
 
-  test("type definition") {
+  test("variant type paramters") {
 
+  }
+
+  test("type definition") {
+    parse("type id = Symbol", definition, TypeDef('id, Seq.empty, TypeDesignator('Symbol)))
   }
 
   test("tmpl definition") {
@@ -75,19 +68,23 @@ class DeclarationsTest extends FunSuite {
   }
 
   test("parameters") {
-    parse("input", param, Parameter(Seq.empty, 'input, None, None))
-    parse("@depreciated input", param, Parameter(Seq(Annotation(TypeDesignator('depreciated))),
+    parse("input", param, RegularParameter(Seq.empty, 'input, None, None))
+    parse("@depreciated input", param, RegularParameter(Seq(Annotation(TypeDesignator('depreciated))),
       'input, None, None))
-    parse("@depreciated @test testing", param, Parameter(
+    parse("@depreciated @test testing", param, RegularParameter(
       Seq(Annotation(TypeDesignator('depreciated)), Annotation(TypeDesignator('test))), 'testing,
       None, None))
-    parse("input: Int", param, Parameter(Seq.empty, 'input,
+    parse("input: Int", param, RegularParameter(Seq.empty, 'input,
       Some(RegularParamType(TypeDesignator('Int))), None))
-    parse("param = 5", param, Parameter(Seq.empty, 'param, None,
+    parse("param = 5", param, RegularParameter(Seq.empty, 'param, None,
       Some(LiteralExpression(IntegerLiteral(5)))))
-    parse("param: Int = 5", param, Parameter(Seq.empty, 'param,
+    parse("param: Int = 5", param, RegularParameter(Seq.empty, 'param,
       Some(RegularParamType(TypeDesignator('Int))),
-      Some(LiteralExpression(IntegerLiteral(5))))))
+      Some(LiteralExpression(IntegerLiteral(5)))))
+  }
+
+  test("implicit parameters") {
+
   }
 
   test("parameter types") {

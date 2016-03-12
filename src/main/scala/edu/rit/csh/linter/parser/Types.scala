@@ -1,6 +1,7 @@
 package edu.rit.csh.linter.parser
 
 
+import edu.rit.csh.linter.language.Declarations.Declaration
 import edu.rit.csh.linter.language.Types._
 import fastparse.WhitespaceApi
 import fastparse.all._
@@ -29,7 +30,7 @@ object Types {
 
   val simpleType: Parser[SimpleType] = {
     val left = P(
-      ("(" ~ types ~ ")").map { case typs => TupleType(typs: _*) }
+      ("(" ~/ types ~ ")").map { case typs => TupleType(typs: _*) }
       | path.!.filter(_.endsWith(".type")).map { case str => SingletonType(Symbol(str.substring(0, str.length - 5))) }
       | stableId.map { TypeDesignator })
 
@@ -40,20 +41,23 @@ object Types {
     }
   }
 
-
   // 3.2.6 Annotated Types
 
   // AnnotType  ::=  SimpleType {Annotation}
-  val annotType: Parser[AnnotatedType] = P(simpleType ~ annotation)
-    .map { case (tp, attos) => AnnotatedType(tp, attos) }
+  val annotType: Parser[AnnotatedType] = P(simpleType ~ annotation.rep)
+    .map { case (tp, attos) => AnnotatedType(tp, attos:_*) }
 
   // 3.2.7 Compound Types
 
-  val refineStat = P(dcl | "type" ~ typeDef)
+  val refineStat: Parser[Declaration] = P(dcl | "type" ~ typeDef)
 
-  // TODO
+  val refinement = P(nl.? ~ "{" ~ refineStat.rep(min = 1, sep = ";") ~ "}")
+
   val compoundType: Parser[CompoundType] =
-    P(annotType ~ ("with" ~ annotType).rep).map { case (at, ats) => CompoundType(ats :+ at :_*) }
+    P( (annotType.rep(min = 1, sep = "with") ~ refinement.?).map { case (ats, refine) =>
+          CompoundType(ats, refine.getOrElse(Seq.empty))
+        }
+     | refinement.map { case refine => CompoundType(Seq.empty, refine)} )
 
   // 3.2.8
 
@@ -76,10 +80,13 @@ object Types {
 
   // 3.2.10 Existential Types
 
-  val existentialDcl = P(("type" ~/ typeDcl) | ("val" ~/ valDcl))
+  val existentialDcl: Parser[Declaration] = P(("type" ~/ typeDcl) | ("val" ~/ valDcl))
 
-  val typ = P("hi").map { case _ => TypeDesignator('fuck) }
+  val existentialClause: Parser[Seq[Declaration]] = P("forSome" ~ "{" ~ existentialDcl.rep(min = 1, sep = ";") ~ "}")
 
-  //val typ: Parser[FunctionType] = (functionArgs ~ "=>" ~ typ).map { FunctionType.tupled }
+  val typ: Parser[Typ] =
+    P( (functionArgs ~ "=>" ~/ typ).map { FunctionType.tupled }
+     | (infixType ~ existentialClause.?).map { case (infix, eClause) => }
+     )
 
 }

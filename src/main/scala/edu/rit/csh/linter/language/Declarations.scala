@@ -13,18 +13,46 @@ object Declarations {
   abstract class Declaration
 
   // A value declaration val x: T introduces x as a name of a value of type T.
-  case class ValDcl(ids: Seq[Symbol], typ: Typ)
+  case class ValDcl(ids: Seq[Symbol], typ: Typ) extends Declaration
 
-  case class VarDcl(ids: Seq[Symbol], typ: Typ)
+  case class VarDcl(ids: Seq[Symbol], typ: Typ) extends Declaration
 
+  case class FunDcl(id: Symbol, typParams: Seq[TypeParam], params: Seq[Seq[Parameter]],
+                    result: Typ) extends Declaration
+
+  // A type declaration type t[tps] >: L <: U declares t to be an abstract type with lower bound
+  // type L and upper bound type U. If the type parameter clause [tps] is omitted, t abstracts
+  // over a first-order type, otherwise t stands for a type constructor that accepts type arguments
+  // as described by the type parameter clause. If a type declaration appears as a member
+  // declaration of a type, implementations of the type may implement t with any type T for
+  // which L<:T<:U. It is a compile-time error if L does not conform to U. Either or both bounds
+  // may be omitted. If the lower bound L is absent, the bottom type scala.Nothing is assumed. If
+  // the upper bound U is absent, the top type scala.Any is assumed.
+  case class TypeDcl(id: Symbol, typParams: Seq[VariantTypeParam], lowerBound: Option[Typ] = None,
+                     upperBound: Option[Typ] = None) extends Declaration
 
   case class VariantTypeParam(annotations: Seq[Annotation], variance: Option[Dependency.Value],
                               param: TypeParam) extends Declaration
 
+  // declares a new type, this is done like "type id = Symbol"
+  case class TypeDef(id: Symbol, typeParams: Seq[VariantTypeParam], typ: Typ) extends Declaration
+
   type TypeParamClause = Seq[VariantTypeParam]
 
-  case class Parameter(annotations: Seq[Annotation], name: Symbol, typ: Option[ParamType],
+  abstract class Parameter(annotations: Seq[Annotation], name: Symbol, typ: Option[ParamType],
                        expr: Option[Expression]) extends Declaration
+
+  case class RegularParameter(annotations: Seq[Annotation],
+                             name: Symbol,
+                             typ: Option[ParamType],
+                             expr: Option[Expression])
+    extends Parameter(annotations, name, typ, expr)
+
+  case class ImplicitParameter(annotations: Seq[Annotation],
+                               name: Symbol,
+                               typ: Option[ParamType],
+                               expr: Option[Expression])
+    extends Parameter(annotations, name, typ, expr)
 
   // The most general form of a first-order type parameter is @a1…@an ± t >: L <: U. Here, L,
   // and U are lower and upper bounds that constrain possible type arguments for the parameter.

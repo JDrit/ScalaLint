@@ -26,5 +26,5 @@ object Expressions {
 
   case class OpExpression(op: Operator.Value, expr: Expression) extends Expression
 
-  case class LiteralExpression(literal: Literal) extends Expression
+  case class LiteralExpression[T](literal: Literal[T]) extends Expression
 }

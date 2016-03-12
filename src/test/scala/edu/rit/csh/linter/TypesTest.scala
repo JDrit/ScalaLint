@@ -1,6 +1,7 @@
 package edu.rit.csh.linter
 
 import edu.rit.csh.linter.language.Annotations.Annotation
+import edu.rit.csh.linter.language.Declarations.{RegularParameter, RegularParamType, FunDcl, ValDcl}
 import edu.rit.csh.linter.language.Types._
 import edu.rit.csh.linter.parser.Types
 import org.scalatest.FunSuite
@@ -43,6 +44,7 @@ class TypesTest extends FunSuite {
 
 
   test("annotated types") {
+    parse("String", Types.annotType, AnnotatedType(TypeDesignator('String)))
     parse("String @local", Types.annotType, AnnotatedType(TypeDesignator('String), Annotation(TypeDesignator('local))))
   }
 
@@ -73,11 +75,15 @@ class TypesTest extends FunSuite {
   }
 
   test("compound types") {
-
+    parse("String", Types.compoundType, CompoundType(Seq(AnnotatedType(TypeDesignator('String))), Seq.empty))
+    parse("Cloneable with Resetable", Types.compoundType, CompoundType(Seq(AnnotatedType(TypeDesignator('Cloneable)), AnnotatedType(TypeDesignator('Resetable))), Seq.empty))
   }
 
-  test("compound type refinement") {
-
+  test("compound type with refinement") {
+    parse("{ val callsign: String }", Types.compoundType, CompoundType(Seq.empty, Seq(ValDcl(Seq('callsign), TypeDesignator('String)))))
+    parse("{ val callsign: String; def fly(height: Int): Unit }", Types.compoundType, CompoundType(Seq.empty,
+      Seq(ValDcl(Seq('callsign), TypeDesignator('String)), FunDcl('fly, Seq.empty,
+        Seq(Seq(RegularParameter(Seq.empty, 'height, Some(RegularParamType(TypeDesignator('Int))), None))), TypeDesignator('Unit)))))
   }
 
   test("infix types") {
