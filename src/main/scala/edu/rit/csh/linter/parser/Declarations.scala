@@ -36,7 +36,7 @@ object Declarations {
   }
 
 
-  val dcl = P("val" ~/ valDcl | "var" ~/ varDcl)
+  val dcl = P("val" ~/ valDcl | "var" ~/ varDcl | "def" ~/ funDcl)
 
   // 4.3 Type Declarations and Type Aliases
 
