@@ -94,4 +94,6 @@ object Literals {
 
   val id: Parser[Symbol] = P("`" ~ stringLiteral.map { case s => Symbol(s.value) } ~ "`" | plainId)
 
+
+  val nonReservedId = plainId.!.filter(str => !reservedWords.contains(str)).map(str => Symbol(str))
 }

@@ -64,7 +64,7 @@ object Types {
 
   // 3.2.8
 
-  val infixType: Parser[Typ] = P(compoundType ~ (id ~ nl.? ~ compoundType).rep).map {
+  val infixType: Parser[Typ] = P(compoundType ~ (nonReservedId ~ nl.? ~ compoundType).rep).map {
     case (ct, Nil) => ct
     case (ct, cts) => toInfix(ct, cts.toList)
   }

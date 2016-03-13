@@ -1,7 +1,6 @@
 package edu.rit.csh.linter.parser
 
 import edu.rit.csh.linter.language.Declarations._
-import edu.rit.csh.linter.language.Types.Typ
 import fastparse.WhitespaceApi
 import fastparse.all._
 import fastparse.core.Parser
@@ -51,9 +50,9 @@ object Declarations {
 
   // VariantTypeParam ::= {Annotation} [‘+’ | ‘-’] TypeParam
   val variantTypeParam: Parser[VariantTypeParam] = P(annotation.rep ~ ("+" | "-").!.? ~ typeParam).map {
-    case (annotations, None, param) => VariantTypeParam(annotations, None, param)
-    case (annotations, Some("+"), param) => VariantTypeParam(annotations, Some(Covariant), param)
-    case (annotations, Some("-"), param) => VariantTypeParam(annotations, Some(Contravariant), param)
+    case (annotations, None, param) => VariantTypeParam(param, annotations)
+    case (annotations, Some("+"), param) => VariantTypeParam(param, annotations, Some(Covariant))
+    case (annotations, Some("-"), param) => VariantTypeParam(param, annotations, Some(Contravariant))
   }
 
   // TypeParamClause ::= ‘[’ VariantTypeParam {‘,’ VariantTypeParam} ‘]’
@@ -64,12 +63,12 @@ object Declarations {
     .map { case (id, tpc, lower, upper, context) => TypeParam(id, tpc, lower, upper, context) }
 
   // 4.6 Function Declarations and Definitions
-  val funTypeParamClause = P("{" ~ typeParam.rep(min = 1, sep = ",") ~ "}")
+  val funTypeParamClause = P("[" ~ typeParam.rep(min = 1, sep = ",") ~ "]")
 
-  val paramType: Parser[ParamType] =
-    ( typ.map { RegularParamType }
-    | ("=>" ~/ typ).map { ByNameParamType }  // By-Name Parameter
-    | (typ ~ "*").map { RepeatedParamType }) // Repeated Parameters
+  val paramType: Parser[ParamType] = P( (typ ~ "*".!.?).map {
+      case (typ, Some(_)) => RepeatedParamType(typ)
+      case (typ, None) => RegularParamType(typ)
+    } | ("=>" ~/ typ).map { ByNameParamType })
 
   val param: Parser[Parameter] = P(annotation.rep ~ id ~ (":" ~ paramType).? ~ ("=" ~ expr).?)
     .map { case (annots, name, pts, exprD) => RegularParameter(name, annots, pts, exprD) }

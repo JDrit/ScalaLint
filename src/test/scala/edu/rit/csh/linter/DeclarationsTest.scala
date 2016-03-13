@@ -22,11 +22,22 @@ class DeclarationsTest extends FunSuite {
 
   test("function declaration") {
     parse("def x: T", dcl, FunDcl('x, Seq.empty, Seq.empty, TypeDesignator('T)))
-    parse("def identity[T] (x: T): T", dcl, FunDcl('identity, Seq(TypeParam('T)), Seq(Seq(RegularParameter('x, typ = Some(RegularParamType(TypeDesignator('T)))))), TypeDesignator('T)))
+    parse("def identity[T] (x: T): T", dcl, FunDcl('identity, Seq(TypeParam('T)),
+      Seq(Seq(RegularParameter('x, typ = Some(RegularParamType(TypeDesignator('T)))))),
+      TypeDesignator('T)))
+    parse("def add (x: Int)(y: Int): Int", dcl, FunDcl('add, Seq.empty,
+      Seq(Seq(RegularParameter('x, typ = Some(RegularParamType(TypeDesignator('Int))))),
+        Seq(RegularParameter('y, typ = Some(RegularParamType(TypeDesignator('Int)))))),
+      TypeDesignator('Int)))
   }
 
   test("type declaration") {
-
+    parse("type T", dcl, TypeDcl('T))
+    parse("type T >: Numberic", dcl, TypeDcl('T, lowerBound = Some(TypeDesignator('Numberic))))
+    parse("type T <: Numberic", dcl, TypeDcl('T, upperBound = Some(TypeDesignator('Numberic))))
+    parse("type T [S]", dcl, TypeDcl('T, typParams = Seq(VariantTypeParam(TypeParam('S)))))
+    parse("type T [S] >: N <: A", dcl, TypeDcl('T, lowerBound = Some(TypeDesignator('N)),
+      upperBound = Some(TypeDesignator('A)), typParams = Seq(VariantTypeParam(TypeParam('S)))))
   }
 
   test("value pattern definition") {
@@ -70,15 +81,17 @@ class DeclarationsTest extends FunSuite {
   }
 
   test("parameters") {
-    parse("input", param, RegularParameter('input, Seq.empty, None, None))
-    parse("@depreciated input", param, RegularParameter('input, Seq(Annotation(TypeDesignator('depreciated))),
-      None, None))
+    parse("input", param, RegularParameter('input))
+    parse("@depreciated input", param, RegularParameter('input,
+      annotations = Seq(Annotation(TypeDesignator('depreciated)))))
     parse("@depreciated @test testing", param, RegularParameter('testing,
-      Seq(Annotation(TypeDesignator('depreciated)), Annotation(TypeDesignator('test))),
-      None, None))
-    parse("input: Int", param, RegularParameter('input, typ = Some(RegularParamType(TypeDesignator('Int)))))
-    parse("param = 5", param, RegularParameter('param, expr = Some(LiteralExpression(IntegerLiteral(5)))))
-    parse("param: Int = 5", param, RegularParameter('param, typ = Some(RegularParamType(TypeDesignator('Int))),
+      annotations = Seq(Annotation(TypeDesignator('depreciated)), Annotation(TypeDesignator('test)))))
+    parse("input: Int", param, RegularParameter('input,
+      typ = Some(RegularParamType(TypeDesignator('Int)))))
+    parse("param = 5", param, RegularParameter('param,
+      expr = Some(LiteralExpression(IntegerLiteral(5)))))
+    parse("param: Int = 5", param, RegularParameter('param,
+      typ = Some(RegularParamType(TypeDesignator('Int))),
       expr = Some(LiteralExpression(IntegerLiteral(5)))))
   }
 

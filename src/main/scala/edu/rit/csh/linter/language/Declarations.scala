@@ -28,11 +28,17 @@ object Declarations {
   // which L<:T<:U. It is a compile-time error if L does not conform to U. Either or both bounds
   // may be omitted. If the lower bound L is absent, the bottom type scala.Nothing is assumed. If
   // the upper bound U is absent, the top type scala.Any is assumed.
-  case class TypeDcl(id: Symbol, typParams: Seq[VariantTypeParam] = Seq.empty, lowerBound: Option[Typ] = None,
+  case class TypeDcl(id: Symbol,
+                     typParams: Seq[VariantTypeParam] = Seq.empty,
+                     lowerBound: Option[Typ] = None,
                      upperBound: Option[Typ] = None) extends Declaration
 
-  case class VariantTypeParam(annotations: Seq[Annotation], variance: Option[Dependency.Value],
-                              param: TypeParam) extends Declaration
+  // Variance annotations indicate how instances of parameterized types vary with respect to
+  // subtyping. A ‘+’ variance indicates a covariant dependency, a ‘-’ variance indicates a
+  // contravariant dependency, and a missing variance indication indicates an invariant dependency.
+  case class VariantTypeParam(param: TypeParam,
+                              annotations: Seq[Annotation] = Seq.empty,
+                              variance: Option[Dependency.Value] = None) extends Declaration
 
   // declares a new type, this is done like "type id = Symbol"
   case class TypeDef(id: Symbol, typeParams: Seq[VariantTypeParam], typ: Typ) extends Declaration
@@ -62,7 +68,7 @@ object Declarations {
                        params: Option[TypeParamClause] = None,
                        lowerBound: Option[Typ] = None,
                        upperBound: Option[Typ] = None,
-                       contextBound: Option[Typ] = None)
+                       contextBound: Option[Typ] = None) extends Typ
 
   abstract class ParamType(typ: Typ) extends Typ
 
