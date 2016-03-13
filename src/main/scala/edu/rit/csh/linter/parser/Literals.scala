@@ -17,6 +17,8 @@ object Literals {
   val upper = CharIn('A' to 'Z')
   private val letter = lower | upper
 
+  val wildCard = P("_").map { _ => '_ }
+
   val hexDigit: Parser[Int] = hex.!.map { i => Integer.valueOf(i, 16) }
 
   val unicodeEscape = P("\\" ~ "u".rep(min=1) ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit).map { case (h1, h2, h3, h4) =>

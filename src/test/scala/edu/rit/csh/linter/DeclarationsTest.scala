@@ -12,15 +12,17 @@ class DeclarationsTest extends FunSuite {
   import TestUtils._
 
   test("value declaration") {
-
+    parse("val five: Int", dcl, ValDcl(Seq('five), TypeDesignator('Int)))
+    parse("val one, two : Int", dcl, ValDcl(Seq('one, 'two), TypeDesignator('Int)))
   }
 
   test("variable declaration") {
-
+    parse("var str : String", dcl, VarDcl(Seq('str), TypeDesignator('String)))
   }
 
   test("function declaration") {
-
+    parse("def x: T", dcl, FunDcl('x, Seq.empty, Seq.empty, TypeDesignator('T)))
+    parse("def identity[T] (x: T): T", dcl, FunDcl('identity, Seq(TypeParam('T)), Seq(Seq(RegularParameter('x, typ = Some(RegularParamType(TypeDesignator('T)))))), TypeDesignator('T)))
   }
 
   test("type declaration") {
@@ -68,19 +70,16 @@ class DeclarationsTest extends FunSuite {
   }
 
   test("parameters") {
-    parse("input", param, RegularParameter(Seq.empty, 'input, None, None))
-    parse("@depreciated input", param, RegularParameter(Seq(Annotation(TypeDesignator('depreciated))),
-      'input, None, None))
-    parse("@depreciated @test testing", param, RegularParameter(
-      Seq(Annotation(TypeDesignator('depreciated)), Annotation(TypeDesignator('test))), 'testing,
+    parse("input", param, RegularParameter('input, Seq.empty, None, None))
+    parse("@depreciated input", param, RegularParameter('input, Seq(Annotation(TypeDesignator('depreciated))),
       None, None))
-    parse("input: Int", param, RegularParameter(Seq.empty, 'input,
-      Some(RegularParamType(TypeDesignator('Int))), None))
-    parse("param = 5", param, RegularParameter(Seq.empty, 'param, None,
-      Some(LiteralExpression(IntegerLiteral(5)))))
-    parse("param: Int = 5", param, RegularParameter(Seq.empty, 'param,
-      Some(RegularParamType(TypeDesignator('Int))),
-      Some(LiteralExpression(IntegerLiteral(5)))))
+    parse("@depreciated @test testing", param, RegularParameter('testing,
+      Seq(Annotation(TypeDesignator('depreciated)), Annotation(TypeDesignator('test))),
+      None, None))
+    parse("input: Int", param, RegularParameter('input, typ = Some(RegularParamType(TypeDesignator('Int)))))
+    parse("param = 5", param, RegularParameter('param, expr = Some(LiteralExpression(IntegerLiteral(5)))))
+    parse("param: Int = 5", param, RegularParameter('param, typ = Some(RegularParamType(TypeDesignator('Int))),
+      expr = Some(LiteralExpression(IntegerLiteral(5)))))
   }
 
   test("implicit parameters") {

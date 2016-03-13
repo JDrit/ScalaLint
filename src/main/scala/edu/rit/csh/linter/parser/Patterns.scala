@@ -16,8 +16,6 @@ object Patterns {
 
   import whitespace._
 
-  val wildCard = P("_").map { _ => '_ }
-
   // 8.2 Type Patterns
   val typPat = typ
 

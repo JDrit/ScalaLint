@@ -30,19 +30,6 @@ class TypesTest extends FunSuite {
     parse("C.super[M].x", Types.path, Symbol("C.super[M].x"))
   }
 
-  test("type") {
-
-  }
-
-  test("types") {
-
-  }
-
-  test("type arguments") {
-
-  }
-
-
   test("annotated types") {
     parse("String", Types.annotType, TypeDesignator('String))
     parse("String @local", Types.annotType, AnnotatedType(TypeDesignator('String), Annotation(TypeDesignator('local))))
@@ -90,7 +77,7 @@ class TypesTest extends FunSuite {
       Seq('callsign), TypeDesignator('String)))))
     parse("{ val callsign: String; def fly(height: Int): Unit }", Types.compoundType, CompoundType(Seq.empty,
       Seq(ValDcl(Seq('callsign), TypeDesignator('String)), FunDcl('fly, Seq.empty,
-        Seq(Seq(RegularParameter(Seq.empty, 'height, Some(RegularParamType(TypeDesignator('Int))), None))), TypeDesignator('Unit)))))
+        Seq(Seq(RegularParameter('height, typ = Some(RegularParamType(TypeDesignator('Int)))))), TypeDesignator('Unit)))))
   }
 
   test("infix types") {

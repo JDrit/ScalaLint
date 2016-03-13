@@ -22,7 +22,7 @@ object Declarations {
 
   // 4.1 Value Declarations and Definitions
 
-  val ids = P(id ~ ("," ~ id).rep).map { case (id, ids) => ids :+ id }
+  val ids = P(id.rep(min = 1, sep = ","))
 
   // ValDcl ::= ids ‘:’ Type
   val valDcl = P(ids ~ ":" ~ typ).map { ValDcl.tupled }
@@ -32,11 +32,11 @@ object Declarations {
     case (name, None, lower, upper) => TypeDcl(name, Seq.empty, lower, upper)
   }
   val funDcl = P(funSig ~ ":" ~ typ).map {
-    case (id, typeClause, paramClause, result) => FunDcl(id, typeClause.getOrElse(Seq.empty), paramClause, result)
+    case (id, typeClause, pc, result) => FunDcl(id, typeClause.getOrElse(Seq.empty), pc, result)
   }
 
 
-  val dcl = P("val" ~/ valDcl | "var" ~/ varDcl | "def" ~/ funDcl)
+  val dcl = P("val" ~/ valDcl | "var" ~/ varDcl | "def" ~/ funDcl | "type" ~/ typeDcl)
 
   // 4.3 Type Declarations and Type Aliases
 
@@ -60,7 +60,8 @@ object Declarations {
   val typeParamClause: Parser[Seq[VariantTypeParam]] =
     P("[" ~ variantTypeParam ~ ("," ~ variantTypeParam).rep ~ "]").map { case (ty, tys) => tys :+ ty }
 
-  val typeParam: Parser[TypeParam] = P((id | "_").! ~ typeParamClause.? ~ (">:" ~ typ).? ~ ("<:" ~ typ).? ~ (":" ~ typ).?).map { TypeParam.tupled }
+  val typeParam: Parser[TypeParam] = P((id | wildCard) ~ typeParamClause.? ~ (">:" ~ typ).? ~ ("<:" ~ typ).? ~ (":" ~ typ).?)
+    .map { case (id, tpc, lower, upper, context) => TypeParam(id, tpc, lower, upper, context) }
 
   // 4.6 Function Declarations and Definitions
   val funTypeParamClause = P("{" ~ typeParam.rep(min = 1, sep = ",") ~ "}")
@@ -70,7 +71,8 @@ object Declarations {
     | ("=>" ~/ typ).map { ByNameParamType }  // By-Name Parameter
     | (typ ~ "*").map { RepeatedParamType }) // Repeated Parameters
 
-  val param: Parser[Parameter] = P(annotation.rep ~ id ~ (":" ~ paramType).? ~ ("=" ~ expr).?).map { RegularParameter.tupled }
+  val param: Parser[Parameter] = P(annotation.rep ~ id ~ (":" ~ paramType).? ~ ("=" ~ expr).?)
+    .map { case (annots, name, pts, exprD) => RegularParameter(name, annots, pts, exprD) }
 
   val params: Parser[Seq[Parameter]] = P(param.rep(min = 1, sep = ","))
 

@@ -39,26 +39,26 @@ object Declarations {
 
   type TypeParamClause = Seq[VariantTypeParam]
 
-  abstract class Parameter(annotations: Seq[Annotation], name: Symbol, typ: Option[ParamType],
+  abstract class Parameter(name: Symbol, annotations: Seq[Annotation], typ: Option[ParamType],
                        expr: Option[Expression]) extends Declaration
 
-  case class RegularParameter(annotations: Seq[Annotation],
-                             name: Symbol,
-                             typ: Option[ParamType],
-                             expr: Option[Expression])
-    extends Parameter(annotations, name, typ, expr)
+  case class RegularParameter(name: Symbol,
+                              annotations: Seq[Annotation] = Seq.empty,
+                              typ: Option[ParamType] = None,
+                              expr: Option[Expression] = None)
+    extends Parameter(name, annotations, typ, expr)
 
-  case class ImplicitParameter(annotations: Seq[Annotation],
-                               name: Symbol,
-                               typ: Option[ParamType],
-                               expr: Option[Expression])
-    extends Parameter(annotations, name, typ, expr)
+  case class ImplicitParameter(name: Symbol,
+                               annotations: Seq[Annotation] = Seq.empty,
+                               typ: Option[ParamType] = None,
+                               expr: Option[Expression] = None)
+    extends Parameter(name, annotations, typ, expr)
 
   // The most general form of a first-order type parameter is @a1…@an ± t >: L <: U. Here, L,
   // and U are lower and upper bounds that constrain possible type arguments for the parameter.
   // It is a compile-time error if L does not conform to U. ± is a variance, i.e. an optional
   // prefix of either +, or -. One or more annotations may precede the type parameter.
-  case class TypeParam(name: String,
+  case class TypeParam(name: Symbol,
                        params: Option[TypeParamClause] = None,
                        lowerBound: Option[Typ] = None,
                        upperBound: Option[Typ] = None,
