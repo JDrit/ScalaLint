@@ -43,6 +43,8 @@ object Declarations {
 
   case class PatternDef(patterns: Seq[Pattern] = Seq.empty, typ: Option[Typ] = None, exp: Expression)
 
+  case class ValDef(definition: PatternDef)
+
   // declares a new type, this is done like "type id = Symbol"
   case class TypeDef(id: Symbol, typeParams: Seq[VariantTypeParam], typ: Typ) extends Declaration
 

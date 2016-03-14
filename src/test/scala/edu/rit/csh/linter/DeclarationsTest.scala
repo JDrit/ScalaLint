@@ -2,9 +2,9 @@ package edu.rit.csh.linter
 
 import edu.rit.csh.linter.language.Annotations.Annotation
 import edu.rit.csh.linter.language.Declarations._
-import edu.rit.csh.linter.language.Expressions.LiteralExpression
-import edu.rit.csh.linter.language.Literals.IntegerLiteral
-import edu.rit.csh.linter.language.Patterns.VariablePattern
+import edu.rit.csh.linter.language.Expressions.{TupleExpression, LiteralExpression}
+import edu.rit.csh.linter.language.Literals.{FloatingLiteral, IntegerLiteral}
+import edu.rit.csh.linter.language.Patterns.{TuplePattern, BindingPattern, VariablePattern}
 import edu.rit.csh.linter.language.Types._
 import edu.rit.csh.linter.parser.Declarations._
 import org.scalatest.FunSuite
@@ -42,12 +42,20 @@ class DeclarationsTest extends FunSuite {
   }
 
   test("pattern definition") {
-    parse("x : T = 5", patDef, PatternDef(Seq(VariablePattern('x)), Some(TypeDesignator('T)), LiteralExpression(IntegerLiteral(5))))
-    parse("x = 5", patDef, PatternDef(Seq(VariablePattern('x)), exp = LiteralExpression(IntegerLiteral(5))))
+    parse("x : T = 5", patDef, PatternDef(Seq(VariablePattern('x)), Some(TypeDesignator('T)),
+      LiteralExpression(IntegerLiteral(5))))
+    parse("x = 5", patDef, PatternDef(Seq(VariablePattern('x)),
+      exp = LiteralExpression(IntegerLiteral(5))))
+    parse("x @ (y, z) = (1, 2)", patDef, PatternDef(Seq(BindingPattern('x,
+      TuplePattern(VariablePattern('y), VariablePattern('z)))), exp = TupleExpression(
+      LiteralExpression(IntegerLiteral(1)), LiteralExpression(IntegerLiteral(2)))))
   }
 
   test("value pattern definition") {
-
+    parse("val pi = 3.1415", patVarDef, ValDef(PatternDef(Seq(VariablePattern('pi)), None, LiteralExpression(FloatingLiteral(3.1415)))))
+    parse("val pi: Double = 3.1415", patVarDef, ValDef(PatternDef(Seq(VariablePattern('pi)), Some(TypeDesignator('Double)), LiteralExpression(FloatingLiteral(3.1415)))))
+    //parse("val Some(x) = f()")
+    //parse("val x :: xs = mylist")
   }
 
   test("variable pattern definition") {

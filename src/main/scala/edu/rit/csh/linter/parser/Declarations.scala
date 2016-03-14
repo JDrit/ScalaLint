@@ -40,7 +40,7 @@ object Declarations {
 
   val patDef = P(pattern2.rep(min = 1, sep = ",") ~ (":" ~ typ).? ~ "=" ~ expr).map(PatternDef.tupled)
 
-  val patValDef = P("val" ~ patDef)
+  val patVarDef = P(("val" ~ patDef).map(ValDef))
 
   // 4.3 Type Declarations and Type Aliases
 

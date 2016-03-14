@@ -27,4 +27,8 @@ object Expressions {
   case class OpExpression(op: Operator.Value, expr: Expression) extends Expression
 
   case class LiteralExpression[T](literal: Literal[T]) extends Expression
+
+  // A tuple expression (e1,…,en) is an alias for the class instance creation scala.Tuplen(e1,…,en),
+  // where n≥2. The empty tuple () is the unique value of type scala.Unit.
+  case class TupleExpression(exprs: Expression*) extends Expression
 }
