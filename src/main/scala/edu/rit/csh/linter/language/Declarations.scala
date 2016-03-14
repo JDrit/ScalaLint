@@ -2,6 +2,7 @@ package edu.rit.csh.linter.language
 
 import edu.rit.csh.linter.language.Annotations.Annotation
 import edu.rit.csh.linter.language.Expressions.Expression
+import edu.rit.csh.linter.language.Patterns.Pattern
 import edu.rit.csh.linter.language.Types.Typ
 
 object Declarations {
@@ -39,6 +40,8 @@ object Declarations {
   case class VariantTypeParam(param: TypeParam,
                               annotations: Seq[Annotation] = Seq.empty,
                               variance: Option[Dependency.Value] = None) extends Declaration
+
+  case class PatternDef(patterns: Seq[Pattern] = Seq.empty, typ: Option[Typ] = None, exp: Expression)
 
   // declares a new type, this is done like "type id = Symbol"
   case class TypeDef(id: Symbol, typeParams: Seq[VariantTypeParam], typ: Typ) extends Declaration

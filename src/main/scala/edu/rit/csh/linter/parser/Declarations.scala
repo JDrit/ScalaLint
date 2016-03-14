@@ -11,6 +11,7 @@ object Declarations {
   import Annotations._
   import Dependency._
   import Expressions._
+  import Patterns._
 
   val whitespace = WhitespaceApi.Wrapper{
     import fastparse.all._
@@ -36,6 +37,10 @@ object Declarations {
 
 
   val dcl = P("val" ~/ valDcl | "var" ~/ varDcl | "def" ~/ funDcl | "type" ~/ typeDcl)
+
+  val patDef = P(pattern2.rep(min = 1, sep = ",") ~ (":" ~ typ).? ~ "=" ~ expr).map(PatternDef.tupled)
+
+  val patValDef = P("val" ~ patDef)
 
   // 4.3 Type Declarations and Type Aliases
 

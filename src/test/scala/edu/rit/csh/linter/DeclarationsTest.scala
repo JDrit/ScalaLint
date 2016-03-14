@@ -4,6 +4,7 @@ import edu.rit.csh.linter.language.Annotations.Annotation
 import edu.rit.csh.linter.language.Declarations._
 import edu.rit.csh.linter.language.Expressions.LiteralExpression
 import edu.rit.csh.linter.language.Literals.IntegerLiteral
+import edu.rit.csh.linter.language.Patterns.VariablePattern
 import edu.rit.csh.linter.language.Types._
 import edu.rit.csh.linter.parser.Declarations._
 import org.scalatest.FunSuite
@@ -40,6 +41,11 @@ class DeclarationsTest extends FunSuite {
       upperBound = Some(TypeDesignator('A)), typParams = Seq(VariantTypeParam(TypeParam('S)))))
   }
 
+  test("pattern definition") {
+    parse("x : T = 5", patDef, PatternDef(Seq(VariablePattern('x)), Some(TypeDesignator('T)), LiteralExpression(IntegerLiteral(5))))
+    parse("x = 5", patDef, PatternDef(Seq(VariablePattern('x)), exp = LiteralExpression(IntegerLiteral(5))))
+  }
+
   test("value pattern definition") {
 
   }
@@ -56,7 +62,7 @@ class DeclarationsTest extends FunSuite {
 
   }
 
-  test("variant type paramters") {
+  test("variant type parameters") {
 
   }
 
@@ -76,16 +82,13 @@ class DeclarationsTest extends FunSuite {
 
   }
 
-  test("parameter clause") {
-
-  }
-
   test("parameters") {
     parse("input", param, RegularParameter('input))
     parse("@depreciated input", param, RegularParameter('input,
       annotations = Seq(Annotation(TypeDesignator('depreciated)))))
     parse("@depreciated @test testing", param, RegularParameter('testing,
-      annotations = Seq(Annotation(TypeDesignator('depreciated)), Annotation(TypeDesignator('test)))))
+      annotations = Seq(Annotation(TypeDesignator('depreciated)),
+        Annotation(TypeDesignator('test)))))
     parse("input: Int", param, RegularParameter('input,
       typ = Some(RegularParamType(TypeDesignator('Int)))))
     parse("param = 5", param, RegularParameter('param,
@@ -96,12 +99,17 @@ class DeclarationsTest extends FunSuite {
   }
 
   test("implicit parameters") {
-
+    parse("(implicit x: Int)", paramClauses, Seq(Seq(ImplicitParameter('x,
+      typ = Some(RegularParamType(TypeDesignator('Int)))))))
+    parse("(x: String)(implicit x1: Int)", paramClauses, Seq(Seq(RegularParameter('x,
+      typ = Some(RegularParamType(TypeDesignator('String))))),
+      Seq(ImplicitParameter('x1, typ = Some(RegularParamType(TypeDesignator('Int)))))))
   }
 
   test("parameter types") {
     parse("Integer", paramType, RegularParamType(TypeDesignator('Integer)))
-    parse("=> (String, Integer)", paramType, ByNameParamType(TupleType(TypeDesignator('String), TypeDesignator('Integer))))
+    parse("=> (String, Integer)", paramType, ByNameParamType(TupleType(TypeDesignator('String),
+      TypeDesignator('Integer))))
     parse("String*", paramType, RepeatedParamType(TypeDesignator('String)))
     parse("String *", paramType, RepeatedParamType(TypeDesignator('String)))
   }
