@@ -2,9 +2,9 @@ package edu.rit.csh.linter
 
 import edu.rit.csh.linter.language.Annotations.Annotation
 import edu.rit.csh.linter.language.Declarations._
-import edu.rit.csh.linter.language.Expressions.{TupleExpression, LiteralExpression}
+import edu.rit.csh.linter.language.Expressions.{DefaultExpression, TupleExpression, LiteralExpression}
 import edu.rit.csh.linter.language.Literals.{FloatingLiteral, IntegerLiteral}
-import edu.rit.csh.linter.language.Patterns.{TuplePattern, BindingPattern, VariablePattern}
+import edu.rit.csh.linter.language.Patterns.{ConstructorPattern, TuplePattern, BindingPattern, VariablePattern}
 import edu.rit.csh.linter.language.Types._
 import edu.rit.csh.linter.parser.Declarations._
 import org.scalatest.FunSuite
@@ -52,42 +52,40 @@ class DeclarationsTest extends FunSuite {
   }
 
   test("value pattern definition") {
-    parse("val pi = 3.1415", patVarDef, ValDef(PatternDef(Seq(VariablePattern('pi)), None, LiteralExpression(FloatingLiteral(3.1415)))))
-    parse("val pi: Double = 3.1415", patVarDef, ValDef(PatternDef(Seq(VariablePattern('pi)), Some(TypeDesignator('Double)), LiteralExpression(FloatingLiteral(3.1415)))))
-    //parse("val Some(x) = f()")
-    //parse("val x :: xs = mylist")
+    parse("val pi = 3.1415", patVarDef, ValDef(PatternDef(Seq(VariablePattern('pi)),
+      None, LiteralExpression(FloatingLiteral(3.1415)))))
+    parse("val pi: Double = 3.1415", patVarDef, ValDef(PatternDef(Seq(VariablePattern('pi)),
+      Some(TypeDesignator('Double)), LiteralExpression(FloatingLiteral(3.1415)))))
+    parse("val Some(x) = 2", patVarDef, ValDef(PatternDef(
+      Seq(ConstructorPattern('Some, VariablePattern('x))), None,
+      LiteralExpression(IntegerLiteral(2)))))
+    parse("val x :: xs = 5", patVarDef, ValDef(PatternDef(
+      Seq(ConstructorPattern('::, VariablePattern('x), VariablePattern('xs))), None,
+      LiteralExpression(IntegerLiteral(5)))))
   }
 
   test("variable pattern definition") {
-
-  }
-
-  test("pattern variable definition") {
-
+    parse("var x, y: Int = _", patVarDef, VarDef(PatternDef(Seq(VariablePattern('x),
+      VariablePattern('y)), Some(TypeDesignator('Int)), DefaultExpression(TypeDesignator('Int)))))
+    parse("val pi = 3.1415", patVarDef, ValDef(PatternDef(Seq(VariablePattern('pi)),
+      None, LiteralExpression(FloatingLiteral(3.1415)))))
+    parse("val pi: Double = 3.1415", patVarDef, ValDef(PatternDef(Seq(VariablePattern('pi)),
+      Some(TypeDesignator('Double)), LiteralExpression(FloatingLiteral(3.1415)))))
+    parse("val Some(x) = 2", patVarDef, ValDef(PatternDef(
+      Seq(ConstructorPattern('Some, VariablePattern('x))), None,
+      LiteralExpression(IntegerLiteral(2)))))
+    parse("val x :: xs = 5", patVarDef, ValDef(PatternDef(
+      Seq(ConstructorPattern('::, VariablePattern('x), VariablePattern('xs))), None,
+      LiteralExpression(IntegerLiteral(5)))))
   }
 
   test("function definition") {
-
-  }
-
-  test("variant type parameters") {
-
+    //parse("def one(x: Int): Int = 1", definition, )
+    fail("not yet implemented")
   }
 
   test("type definition") {
     parse("type id = Symbol", definition, TypeDef('id, Seq.empty, TypeDesignator('Symbol)))
-  }
-
-  test("tmpl definition") {
-
-  }
-
-  test("function signature") {
-
-  }
-
-  test("function type parameter clause") {
-
   }
 
   test("parameters") {

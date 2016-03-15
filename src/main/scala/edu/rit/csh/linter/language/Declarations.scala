@@ -45,6 +45,15 @@ object Declarations {
 
   case class ValDef(definition: PatternDef)
 
+
+
+  // A variable declaration var x: T is equivalent to the declarations of both a getter function x
+  // and a setter function x_=:
+  // A variable definition var x: T = e introduces a mutable variable with type T and initial
+  // value as given by the expression e. The type T can be omitted, in which case the type of e
+  // is assumed. If T is given, then e is expected to conform to it.
+  case class VarDef(definition: PatternDef)
+
   // declares a new type, this is done like "type id = Symbol"
   case class TypeDef(id: Symbol, typeParams: Seq[VariantTypeParam], typ: Typ) extends Declaration
 

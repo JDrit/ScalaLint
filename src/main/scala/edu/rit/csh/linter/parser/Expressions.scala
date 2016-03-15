@@ -12,7 +12,7 @@ object Expressions {
         case (cond, thenExpr, elseExpr) => IfExp(cond, thenExpr, elseExpr)
       }
      | ("while" ~ "(" ~ expr ~ ")" ~ nl.rep ~ expr).map { case (cond, exp) => WhileExp(cond, exp) }
-     )
+     ).opaque("expression")
 
   val expr: Parser[Expression] = expr1
 
@@ -21,9 +21,8 @@ object Expressions {
 
   // TODO
   val simpleExpr1: Parser[Expression] =
-    P( Literals.literal.map { case lit => ExpressionLiteral(lit) }
-     | Types.path.map { DesignatorExpression }
-     )
+    P( Literals.literal.map { case lit => LiteralExpression(lit) }
+     | Types.path.map { DesignatorExpression } )
 
   val simpleExpr: Parser[Expression] = simpleExpr1 ~ "_".?
 
@@ -36,4 +35,6 @@ object Expressions {
      )
 
   val argumentExprs: Parser[Seq[Expression]] = P("(" ~/ exprs.?.map { case Some(e) => e ; case None => Seq.empty } ~/ ")")
+
+  val block = P(???)
 }

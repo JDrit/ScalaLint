@@ -1,6 +1,8 @@
 package edu.rit.csh.linter.parser
 
 import edu.rit.csh.linter.language.Declarations._
+import edu.rit.csh.linter.language.Expressions.DefaultExpression
+import edu.rit.csh.linter.language.Patterns.VariablePattern
 import fastparse.WhitespaceApi
 import fastparse.all._
 import fastparse.core.Parser
@@ -12,6 +14,7 @@ object Declarations {
   import Dependency._
   import Expressions._
   import Patterns._
+  import Classes._
 
   val whitespace = WhitespaceApi.Wrapper{
     import fastparse.all._
@@ -40,7 +43,10 @@ object Declarations {
 
   val patDef = P(pattern2.rep(min = 1, sep = ",") ~ (":" ~ typ).? ~ "=" ~ expr).map(PatternDef.tupled)
 
-  val patVarDef = P(("val" ~ patDef).map(ValDef))
+  val varDef: Parser[PatternDef] = P(
+    patDef | (ids ~ ":" ~ typ ~ "=" ~ "_").map { case(ids, typ) => PatternDef(ids.map(VariablePattern), Some(typ), DefaultExpression(typ)) })
+
+  val patVarDef = P( ("val" ~/ patDef).map(ValDef) | ("var" ~/ varDef).map(VarDef))
 
   // 4.3 Type Declarations and Type Aliases
 
@@ -49,7 +55,14 @@ object Declarations {
     TypeDef(id, typeParams.getOrElse(Seq.empty), typ )
   }
 
-  val definition = P("type" ~/ nl.rep ~ typeDef)
+  // 4.6 Function Declarations and Definitions
+  val funDef =
+    P( (funSig ~ (":" ~ typ).? ~ "=" ~/ expr)
+     | (funSig ~ nl.? ~ "{" ~/ block ~ "}")
+     | ("this" ~ paramClause ~ paramClauses)
+     | ("=" ~ constrExpr ~ nl.? ~ constrBlock) )
+
+  val definition = P(patVarDef | "def" ~/ funDef | "type" ~/ nl.rep ~ typeDef | tmplDef)
 
   // 4.4 Type Parameters
 
