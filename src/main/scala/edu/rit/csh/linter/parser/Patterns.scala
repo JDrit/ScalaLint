@@ -26,17 +26,15 @@ object Patterns {
   val stableIdPattern = P(stableId.map { case sid =>
     val first = sid.toString.charAt(1)
     if (first >= 'a' && first <= 'z') {
-      if (sid.toString.contains("."))
-        StableIdPattern(sid)
-      else
-        VariablePattern(sid)
+      if (sid.toString.contains(".")) StableIdPattern(sid)
+      else VariablePattern(sid)
     } else {
       StableIdPattern(sid)
     }
   })
   val constructorPattern = P((stableId ~ "(" ~ patterns.? ~ ")")
     .map { case (id, patts) => ConstructorPattern(id, patts.getOrElse(Seq.empty):_*) })
-  val tuplePattern: Parser[TuplePattern] = P("(" ~ patterns ~ ")").map { case pts => TuplePattern(pts:_*) }
+  val tuplePattern: Parser[TuplePattern] = P("(" ~ patterns ~ ")").map(pts => TuplePattern(pts:_*))
   val sequencePattern = P(stableId ~ "(" ~ (variablePattern ~ ",").rep  ~ (varId ~ "@").? ~ "_" ~ "*" ~ ")")
     .map { case (sid, pts, varid) => SequencePattern(sid, pts, varid) }
 
@@ -46,12 +44,10 @@ object Patterns {
        | sequencePattern
        | constructorPattern
        | stableIdPattern
-       | variablePattern
-       )
+       | variablePattern )
 
-  val pattern3: Parser[Pattern] = P(simplePattern ~ (id ~ nl.? ~ simplePattern).rep).map {
-    case (sp, lst) => toConstructor(sp, lst.toList)
-  }
+  val pattern3: Parser[Pattern] = P(simplePattern ~ (id ~ nl.? ~ simplePattern).rep)
+    .map { case (sp, lst) => toConstructor(sp, lst.toList) }
 
   private def toConstructor(start: Pattern, input: List[(Symbol, Pattern)]): Pattern = input match {
     case Nil => start
@@ -59,13 +55,11 @@ object Patterns {
     case (op, sp) :: pts => ConstructorPattern(op, start, toConstructor(sp, pts))
   }
 
-  val test: List[Int] = 1 :: (2 :: List())
-
   // 8.1.3 Pattern Binders
-  val pattern2 = P((varId ~ "@" ~ pattern3).map { BindingPattern.tupled } | pattern3)
+  val pattern2 = P((varId ~ "@" ~ pattern3).map(BindingPattern.tupled) | pattern3)
 
   // 8.1.2 Typed Patterns
-  val pattern1 = P(pattern2 | ((varId | wildCard) ~ ":" ~ typPat).map { TypedPattern.tupled })
+  val pattern1 = P(pattern2 | ((varId | wildCard) ~ ":" ~ typPat).map(TypedPattern.tupled))
 
   val pattern: Parser[Pattern] = P(pattern1 ~ ("|" ~ pattern1).rep).map {
     case (pt, Nil) => pt

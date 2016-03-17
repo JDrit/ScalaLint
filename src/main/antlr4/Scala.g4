@@ -33,13 +33,29 @@
 
 grammar Scala;
 
-literal           : '-'? IntegerLiteral
-                  | '-'? FloatingPointLiteral
-                  | BooleanLiteral
-                  | CharacterLiteral
-                  | StringLiteral
-                  | SymbolLiteral
-                  | 'null' ;
+@header {
+  import edu.rit.csh.linter.language.Literals.*;
+  import scala.Symbol;
+}
+
+literal returns [Literal value]
+    : t = IntegerLiteral         { if ($t.getText().startsWith("0x"))
+                                     $value = new IntegerLiteral(Integer.parseInt($t.getText().substring(2), 16));
+                                   else if ($t.getText().startsWith("-0x"))
+                                     $value = new IntegerLiteral(-1 * Integer.parseInt($t.getText().substring(3), 16));
+                                   else
+                                     $value = new IntegerLiteral(Integer.parseInt($t.getText(), 10)); }
+
+    | f = FloatingPointLiteral   { $value = new FloatingLiteral(Double.parseDouble($f.getText())); }
+    | b = BooleanLiteral         { if ($b.getText().equals("true")) {
+                                        $value = new BooleanLiteral(true);
+                                   } else {
+                                        $value = new BooleanLiteral(false);
+                                   } }
+    | c = CharacterLiteral       { $value = new CharacterLiteral($c.getText().charAt(0)); }
+    | s = StringLiteral          { $value = new StringLiteral($s.getText()); }
+    | s = SymbolLiteral          { $value = new SymbolLiteral(new Symbol($s.getText())); }
+    | 'null'                     { $value = new NullLiteral(); };
 
 qualId            : Id ('.' Id)* ;
 
@@ -48,7 +64,7 @@ ids               : Id (',' Id)* ;
 stableId          : (Id | (Id '.')? 'this') '.' Id
                   | (Id '.')? 'super' classQualifier? '.' Id ;
 
-classQualifier    : '[' Id ']' ;
+classQualifier    : '[' Id ']';
 
 type              : functionArgTypes '=>' type
                   | infixType existentialClause? ;
@@ -331,18 +347,23 @@ packageObject     : 'package' 'object' objectDef ;
 
 compilationUnit   : ('package' qualId Semi)* topStatSeq ;
 
-// Lexer
+
+// ---------------------------------------------------------------------
+// ---------------------------- Lexer ----------------------------------
+// ---------------------------------------------------------------------
+
 BooleanLiteral   :  'true' | 'false';
 CharacterLiteral :  '\'' (PrintableChar | CharEscapeSeq) '\'';
 StringLiteral    :  '"' StringElement* '"'
                  |  '"""' MultiLineChars '"""';
 SymbolLiteral    :  '\'' Plainid;
-IntegerLiteral   :  (DecimalNumeral | HexNumeral) ('L' | 'l');
+IntegerLiteral   :  '-'? (DecimalNumeral | HexNumeral) ('L' | 'l')?;
 FloatingPointLiteral
-                 :  Digit+ '.' Digit+ ExponentPart? FloatType?
-                 |  '.' Digit+ ExponentPart? FloatType?
-                 |  Digit ExponentPart FloatType?
-                 |  Digit+ ExponentPart? FloatType;
+                 :  '-'? Digit+ '.' Digit+ ExponentPart? FloatType?
+                 |  '-'? '.' Digit+ ExponentPart? FloatType?
+                 |  '-'? Digit ExponentPart FloatType?
+                 |  '-'? Digit+ ExponentPart? FloatType;
+
 Id               :  Plainid
                  |  '`' StringLiteral '`';
 Varid            :  Lower Idrest;
@@ -371,7 +392,7 @@ fragment StringElement    :  '\u0020'| '\u0021'|'\u0023' .. '\u007F'  // (Printa
                           |  CharEscapeSeq;
 fragment MultiLineChars   :  ('"'? '"'? .*?)* '"'*;
 
-fragment HexDigit         :  '0' .. '9'  |  'A' .. 'Z'  |  'a' .. 'z' ;
+fragment HexDigit         :  '0' .. '9'  |  'A' .. 'F'  |  'a' .. 'f' ;
 fragment FloatType        :  'F' | 'f' | 'D' | 'd';
 fragment Upper            :  'A'  ..  'Z' | '$' | '_';  // and Unicode category Lu
 fragment Lower            :  'a' .. 'z'; // and Unicode category Ll
@@ -380,6 +401,6 @@ fragment ExponentPart     :  ('E' | 'e') ('+' | '-')? Digit+;
 fragment PrintableChar    : '\u0020' .. '\u007F' ;
 fragment CharEscapeSeq    : '\\' ('b' | 't' | 'n' | 'f' | 'r' | '"' | '\'' | '\\');
 fragment DecimalNumeral   :  '0' | NonZeroDigit Digit*;
-fragment HexNumeral       :  '0' 'x' HexDigit HexDigit+;
+fragment HexNumeral       :  '0' 'x' HexDigit+;
 fragment Digit            :  '0' | NonZeroDigit;
 fragment NonZeroDigit     :  '1' .. '9';

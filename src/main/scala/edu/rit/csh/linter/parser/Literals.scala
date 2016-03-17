@@ -71,7 +71,7 @@ object Literals {
   val hexNumeral: Parser[Int] = ("0" ~ ("x" | "X") ~ hexDigit.rep(1)).!.map { case str => Integer.valueOf(str.substring(2), 16) }
 
   val nullLiteral = P("null").map(_ => NullLiteral())
-  val symbolLiteral = P("'" ~ plainId.!).map { SymbolLiteral }
+  val symbolLiteral = P("'" ~ plainId.!).map { str => SymbolLiteral(Symbol(str)) }
   val stringLiteral = P("\"" ~ stringElement.rep.map { lst => StringLiteral(listToString(lst)) } ~ "\"")
   val characterLiteral = P("\'" ~ stringElement.map { str => CharacterLiteral(str.charAt(0)) } ~ "\'")
   val booleanLiteral = P("true".!.map { _ => BooleanLiteral(true) } | "false".!.map { _ => BooleanLiteral(false) })

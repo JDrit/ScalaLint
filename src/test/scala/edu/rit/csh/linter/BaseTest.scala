@@ -1,6 +1,8 @@
 package edu.rit.csh.linter
 
 import edu.rit.csh.linter.parser.Literals
+import edu.rit.csh.scalaLint.parser.{ScalaParser, ScalaLexer}
+import org.antlr.v4.runtime.{ANTLRInputStream, CommonTokenStream}
 import org.scalatest.FunSuite
 
 class BaseTest extends FunSuite {
@@ -52,5 +54,7 @@ class BaseTest extends FunSuite {
     parse("\\r", Literals.charEscapeSeq, "\r")
     parse("\\\\", Literals.charEscapeSeq, "\\")
     parseError("\\h", Literals.charEscapeSeq)
+
+
   }
 }
